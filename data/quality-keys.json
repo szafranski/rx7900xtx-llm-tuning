@@ -1,0 +1,90 @@
+[
+ {
+  "id": "z01",
+  "pytanie": "Jaki jest kod czesci zamiennej we wpisie serwisowym R-101?",
+  "klucze": [
+   "CZ-88213-X"
+  ]
+ },
+ {
+  "id": "z02",
+  "pytanie": "Kto jest technikiem odpowiedzialnym we wpisie serwisowym R-102?",
+  "klucze": [
+   "Zubrzyck"
+  ]
+ },
+ {
+  "id": "z03",
+  "pytanie": "Ile godzin pracy pokazuje licznik we wpisie serwisowym R-103?",
+  "klucze": [
+   "6053"
+  ]
+ },
+ {
+  "id": "z04",
+  "pytanie": "W jakiej lokalizacji stoi urzadzenie z wpisu serwisowego R-104?",
+  "klucze": [
+   "szaf",
+   "07"
+  ]
+ },
+ {
+  "id": "z05",
+  "pytanie": "Jaki jest kod czesci zamiennej we wpisie serwisowym R-105?",
+  "klucze": [
+   "CZ-63417-M"
+  ]
+ },
+ {
+  "id": "z06",
+  "pytanie": "Kto jest technikiem odpowiedzialnym we wpisie serwisowym R-106?",
+  "klucze": [
+   "Poplawsk"
+  ]
+ },
+ {
+  "id": "z07",
+  "pytanie": "Ile godzin pracy pokazuje licznik we wpisie serwisowym R-107?",
+  "klucze": [
+   "5162"
+  ]
+ },
+ {
+  "id": "z08",
+  "pytanie": "Jakie urzadzenie opisuje wpis serwisowy R-108?",
+  "klucze": [
+   "bram",
+   "VPN"
+  ]
+ },
+ {
+  "id": "z09",
+  "pytanie": "Zsumuj liczniki godzin pracy z wpisow serwisowych R-103 i R-107. Podaj wynik.",
+  "klucze": [
+   "11215"
+  ]
+ },
+ {
+  "id": "z10",
+  "pytanie": "Odejmij licznik godzin pracy z wpisu R-110 od licznika z wpisu R-109. Podaj wynik.",
+  "klucze": [
+   "3364"
+  ]
+ },
+ {
+  "id": "z11",
+  "pytanie": "W tabeli przepustowosci stanowisk: ktore stanowisko ma najwyzsza przepustowosc i jaka wartosc?",
+  "klucze": [
+   "BETA",
+   "11873"
+  ]
+ },
+ {
+  "id": "z12",
+  "pytanie": "W tabeli przepustowosci stanowisk: ktore stanowisko ma najnizsza przepustowosc i jaka wartosc?",
+  "klucze": [
+   "DELTA",
+   "2716"
+  ]
+ }
+]

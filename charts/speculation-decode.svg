@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 380" width="760" height="380" role="img" aria-labelledby="t d" font-family="DejaVu Sans, Helvetica, Arial, sans-serif">
+<title id="t">Decode throughput by speculative-decoding mode</title><desc id="d">Bar chart of decode tokens per second for six speculation modes on a dense 27B model.</desc>
+<rect width="760" height="380" fill="#ffffff"/>
+<text x="62" y="26" font-size="15" font-weight="600" fill="#1a1a1a">Decode throughput by speculative-decoding mode</text>
+<text x="62" y="45" font-size="11.5" fill="#555555">tokens/s generated, higher is better</text>
+<line x1="62" y1="288.0" x2="736" y2="288.0" stroke="#e2e2e2" stroke-width="1"/>
+<text x="54" y="292.0" font-size="10.5" fill="#666666" text-anchor="end">0</text>
+<line x1="62" y1="232.0" x2="736" y2="232.0" stroke="#e2e2e2" stroke-width="1"/>
+<text x="54" y="236.0" font-size="10.5" fill="#666666" text-anchor="end">18</text>
+<line x1="62" y1="176.0" x2="736" y2="176.0" stroke="#e2e2e2" stroke-width="1"/>
+<text x="54" y="180.0" font-size="10.5" fill="#666666" text-anchor="end">35</text>
+<line x1="62" y1="120.0" x2="736" y2="120.0" stroke="#e2e2e2" stroke-width="1"/>
+<text x="54" y="124.0" font-size="10.5" fill="#666666" text-anchor="end">53</text>
+<line x1="62" y1="64.0" x2="736" y2="64.0" stroke="#e2e2e2" stroke-width="1"/>
+<text x="54" y="68.0" font-size="10.5" fill="#666666" text-anchor="end">70</text>
+<line x1="62" y1="288" x2="736" y2="288" stroke="#999999" stroke-width="1"/>
+<rect x="83.3" y="176.0" width="69.6" height="112.0" fill="#3b6ea5"><title>none: 35.2</title></rect>
+<text x="118.2" y="170.0" font-size="11.5" font-weight="600" fill="#1a1a1a" text-anchor="middle">35.2</text>
+<text x="118.2" y="305.0" font-size="11" fill="#333333" text-anchor="middle">none</text>
+<rect x="195.7" y="98.9" width="69.6" height="189.1" fill="#8c4a6e"><title>draft-mtp: 59.4</title></rect>
+<text x="230.5" y="92.9" font-size="11.5" font-weight="600" fill="#1a1a1a" text-anchor="middle">59.4</text>
+<text x="230.5" y="305.0" font-size="11" fill="#333333" text-anchor="middle">draft-mtp</text>
+<rect x="308.0" y="114.7" width="69.6" height="173.3" fill="#4a7c59"><title>draft-chain: 54.5</title></rect>
+<text x="342.8" y="108.7" font-size="11.5" font-weight="600" fill="#1a1a1a" text-anchor="middle">54.5</text>
+<text x="342.8" y="305.0" font-size="11" fill="#333333" text-anchor="middle">draft-chain</text>
+<rect x="420.3" y="98.2" width="69.6" height="189.8" fill="#a1662f"><title>mtp+ngram-mod: 59.6</title></rect>
+<text x="455.2" y="92.2" font-size="11.5" font-weight="600" fill="#1a1a1a" text-anchor="middle">59.6</text>
+<text x="455.2" y="305.0" font-size="11" fill="#333333" text-anchor="middle">mtp+ngram-mod</text>
+<rect x="532.7" y="102.0" width="69.6" height="186.0" fill="#5b5b7a"><title>mtp+ngram: 58.4</title></rect>
+<text x="567.5" y="96.0" font-size="11.5" font-weight="600" fill="#1a1a1a" text-anchor="middle">58.4</text>
+<text x="567.5" y="305.0" font-size="11" fill="#333333" text-anchor="middle">mtp+ngram</text>
+<rect x="645.0" y="101.9" width="69.6" height="186.1" fill="#7a6a3a"><title>mtp+ngram-map-k: 58.5</title></rect>
+<text x="679.8" y="95.9" font-size="11.5" font-weight="600" fill="#1a1a1a" text-anchor="middle">58.5</text>
+<text x="679.8" y="305.0" font-size="11" fill="#333333" text-anchor="middle">mtp+ngram-map-k</text>
+<text x="62" y="350" font-size="10" fill="#666666">Source: data/spec-vs-none.jsonl. One run per mode, 19134-token prompt, 1200 tokens generated.</text>
+<text x="62" y="363" font-size="10" fill="#666666">Best mode is 1.69x the no-speculation baseline of 35.2 tok/s.</text>
+<text x="62" y="376" font-size="10" fill="#666666">Single run per mode: this ranks the modes, it does not establish run-to-run variance.</text>
+<text x="62" y="389" font-size="10" fill="#666666">See speculation-soak.svg for the same comparison with repeated runs.</text>
+</svg>

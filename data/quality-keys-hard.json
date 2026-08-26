@@ -1,0 +1,83 @@
+[
+ {
+  "id": "t01",
+  "pytanie": "Zsumuj liczniki godzin pracy ze WSZYSTKICH wpisow serwisowych od R-101 do R-110. Podaj sam wynik.",
+  "klucze": [
+   "50768"
+  ]
+ },
+ {
+  "id": "t02",
+  "pytanie": "Ktory wpis serwisowy ma najwyzszy licznik godzin pracy? Podaj jego numer i wartosc licznika.",
+  "klucze": [
+   "R-108",
+   "9405"
+  ]
+ },
+ {
+  "id": "t03",
+  "pytanie": "Ktory wpis serwisowy ma najnizszy licznik godzin pracy? Podaj jego numer i wartosc licznika.",
+  "klucze": [
+   "R-104",
+   "1284"
+  ]
+ },
+ {
+  "id": "t04",
+  "pytanie": "Wypisz numery wszystkich wpisow serwisowych, ktorych licznik godzin pracy przekracza 5000.",
+  "klucze": [
+   "R-101",
+   "R-103",
+   "R-105",
+   "R-107",
+   "R-108"
+  ]
+ },
+ {
+  "id": "t05",
+  "pytanie": "Wypisz numery trzech wpisow serwisowych o najnizszych licznikach godzin pracy, od najnizszego.",
+  "klucze": [
+   "R-104",
+   "R-110",
+   "R-102"
+  ]
+ },
+ {
+  "id": "t06",
+  "pytanie": "Kto jest technikiem odpowiedzialnym za urzadzenie stojace w szafie 23? Podaj tez, jakie to urzadzenie.",
+  "klucze": [
+   "Cholew",
+   "router"
+  ]
+ },
+ {
+  "id": "t07",
+  "pytanie": "Podaj kod czesci zamiennej dla tego wpisu serwisowego, ktory ma najwyzszy licznik godzin pracy.",
+  "klucze": [
+   "CZ-34952-R"
+  ]
+ },
+ {
+  "id": "t08",
+  "pytanie": "W jakiej lokalizacji stoi urzadzenie z wpisu o najnizszym liczniku godzin pracy? Podaj tez nazwisko technika.",
+  "klucze": [
+   "szaf",
+   "07",
+   "Skrzypczak"
+  ]
+ },
+ {
+  "id": "t09",
+  "pytanie": "Zsumuj wszystkie wartosci przepustowosci z tabeli przepustowosci stanowisk. Podaj sam wynik.",
+  "klucze": [
+   "35199"
+  ]
+ },
+ {
+  "id": "t10",
+  "pytanie": "Jaka jest roznica miedzy najwyzsza i najnizsza przepustowoscia w tabeli przepustowosci stanowisk?",
+  "klucze": [
+   "9157"
+  ]
+ }
+]

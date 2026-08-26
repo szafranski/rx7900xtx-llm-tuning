@@ -1,0 +1,18 @@
+=== f16c-oszczednosc-ngmapk-aspmdefault === vo=-75mV cap=272W perf=manual aspm=default spec=--spec-type draft-mtp,ngram-map-k --spec-draft-n-max 3 --spec-draft-p-min 0.60
+PPL f16c-oszczednosc-ngmapk-aspmdefault na zimno=5.9335 ref=5.9335
+  junction po soaku=80 C
+PPL f16c-oszczednosc-ngmapk-aspmdefault po soaku=5.9335 (przed: 5.9335)
+SOAK skroty: 70 przebiegow, 46 unikalnych, odniesienie=bb0c0ed50595
+UWAGA: wyjscie nie jest powtarzalne pod obciazeniem: ['0ccd5c815383', '27dd36064365', '2803721fa958', '2d2a5cc6f5bb', '2fd49b40cf0b', '380e0df8ce36', '385f272f4744', '3d455f26c4d7', '3dd6a95224a0', '3fe167277972', '45c4a8dce055', '487e48989741', '4bbf4a361048', '4d977a1fdc5e', '5d969e00fb26', '6b6dd7908046', '6c1fbfe63f5f', '6d1a8fed596a', '6da169b46275', '73342fdfabbd', '7aa1a6097a22', '81e747ade0dc', '85897c22ba09', '92940cf794b7', '98019e5ff291', '98915e4c46bb', '9f67265dfe98', 'a0a2cc88bd6a', 'a0f83be5a071', 'afcc8408c2d3', 'b1ac028dc367', 'b6a76ef58934', 'b7fa95f28675', 'bb0c0ed50595', 'c94f4b0b2760', 'ca562fb19685', 'cd39d3e6672f', 'cddd63b2cd61', 'da87c254d624', 'e5e5f7da7bbb', 'f1753b57e74f', 'f19e64e757be', 'f2b10b1a1f75', 'f966e48887fc', 'fc5960e25a51', 'fd1a8db2fa81']
+DMESG f16c-oszczednosc-ngmapk-aspmdefault amdgpu-incydenty: bazowo=0 teraz=0 NOWE=0
+F16C DONE
+PRZYWROCONO cap=272W perf=auto aspm=default
+=== f16c-oszczednosc-ngmapk-aspmdefault === vo=0mV cap=272W perf=manual aspm=default spec=--spec-type draft-mtp,ngram-map-k --spec-draft-n-max 3 --spec-draft-p-min 0.60
+PPL f16c-oszczednosc-ngmapk-aspmdefault na zimno=5.9335 ref=5.9335
+  junction po soaku=78 C
+PPL f16c-oszczednosc-ngmapk-aspmdefault po soaku=5.9335 (przed: 5.9335)
+SOAK skroty: 11 przebiegow, 11 unikalnych, odniesienie=bb0c0ed50595
+UWAGA: wyjscie nie jest powtarzalne pod obciazeniem: ['2d2a5cc6f5bb', '2fd49b40cf0b', '45c4a8dce055', '5d969e00fb26', '6c1fbfe63f5f', '81e747ade0dc', '98019e5ff291', 'b7fa95f28675', 'bb0c0ed50595', 'c94f4b0b2760', 'da87c254d624']
+DMESG f16c-oszczednosc-ngmapk-aspmdefault amdgpu-incydenty: bazowo=0 teraz=0 NOWE=0
+F16C DONE
+PRZYWROCONO cap=272W perf=auto aspm=default

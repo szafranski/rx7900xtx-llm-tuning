@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 380" width="760" height="380" role="img" aria-labelledby="t d" font-family="DejaVu Sans, Helvetica, Arial, sans-serif">
+<title id="t">Energy per generated token during the 30-minute soak</title><desc id="d">Bar chart comparing joules per generated token with and without speculative decoding.</desc>
+<rect width="760" height="380" fill="#ffffff"/>
+<text x="62" y="26" font-size="15" font-weight="600" fill="#1a1a1a">Energy per generated token during the 30-minute soak</text>
+<text x="62" y="45" font-size="11.5" fill="#555555">joules per generated token, lower is better</text>
+<line x1="62" y1="288.0" x2="736" y2="288.0" stroke="#e2e2e2" stroke-width="1"/>
+<text x="54" y="292.0" font-size="10.5" fill="#666666" text-anchor="end">0</text>
+<line x1="62" y1="232.0" x2="736" y2="232.0" stroke="#e2e2e2" stroke-width="1"/>
+<text x="54" y="236.0" font-size="10.5" fill="#666666" text-anchor="end">2</text>
+<line x1="62" y1="176.0" x2="736" y2="176.0" stroke="#e2e2e2" stroke-width="1"/>
+<text x="54" y="180.0" font-size="10.5" fill="#666666" text-anchor="end">5</text>
+<line x1="62" y1="120.0" x2="736" y2="120.0" stroke="#e2e2e2" stroke-width="1"/>
+<text x="54" y="124.0" font-size="10.5" fill="#666666" text-anchor="end">7</text>
+<line x1="62" y1="64.0" x2="736" y2="64.0" stroke="#e2e2e2" stroke-width="1"/>
+<text x="54" y="68.0" font-size="10.5" fill="#666666" text-anchor="end">10</text>
+<line x1="62" y1="288" x2="736" y2="288" stroke="#999999" stroke-width="1"/>
+<rect x="188.5" y="98.2" width="84.0" height="189.8" fill="#3b6ea5"><title>no speculation: 8.47</title></rect>
+<text x="230.5" y="92.2" font-size="11.5" font-weight="600" fill="#1a1a1a" text-anchor="middle">8.47</text>
+<text x="230.5" y="305.0" font-size="11" fill="#333333" text-anchor="middle">no speculation</text>
+<text x="230.5" y="320.0" font-size="9.5" fill="#777777" text-anchor="middle" font-family="DejaVu Sans Mono, monospace">23.8 tok/s, 202 W</text>
+<rect x="525.5" y="183.3" width="84.0" height="104.7" fill="#8c4a6e"><title>mtp+ngram-map-k: 4.67</title></rect>
+<text x="567.5" y="177.3" font-size="11.5" font-weight="600" fill="#1a1a1a" text-anchor="middle">4.67</text>
+<text x="567.5" y="305.0" font-size="11" fill="#333333" text-anchor="middle">mtp+ngram-map-k</text>
+<text x="567.5" y="320.0" font-size="9.5" fill="#777777" text-anchor="middle" font-family="DejaVu Sans Mono, monospace">47.6 tok/s, 222 W</text>
+<text x="62" y="350" font-size="10" fill="#666666">Source: data/soak-efficient-*-runs.jsonl. 6 and 11 requests, mean of per-request means.</text>
+<text x="62" y="363" font-size="10" fill="#666666">J/token = mean board power during decode divided by mean decode tokens/s.</text>
+<text x="62" y="376" font-size="10" fill="#666666">Board power only; it excludes CPU and the rest of the system.</text>
+<text x="62" y="389" font-size="10" fill="#666666">This metric is only comparable because both settings generate the same 1200 tokens per request.</text>
+</svg>

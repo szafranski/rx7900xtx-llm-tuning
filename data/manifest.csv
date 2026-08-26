@@ -1,0 +1,25 @@
+file,experiment,configuration,script,records,bytes,sha256
+aspm-cpu-package.jsonl,ASPM effect on CPU package power,"272 W, -75 mV, 2200 MHz",bench-aspm-cpu.sh,12,8761,23ac2c9f15839418a99d57cf4b45818cdc8589201d5da0a8bd37aece1b3cc9da
+aspm-idle.jsonl,"ASPM at idle, GPU rail","272 W, -75 mV, 2200 MHz",bench-aspm-idle.sh,6,2896,9f08dd9cccfed20979bccabe96dc2b59561179f902609bfcd8fa1ab5fd77c2ca
+aspm-perplexity.tsv,Perplexity before and after the ASPM sweep,"272 W, -75 mV, 2200 MHz",bench-aspm.sh,2,48,95c27142066138ac067f866fa428dbffdbabaebdb36210ecab86daa6bb12f982
+aspm-under-load.jsonl,ASPM default/performance/powersave under decode load,"272 W, -75 mV, 2200 MHz",bench-aspm.sh,12,11928,04afc8d99adefcfa615f4ab7482c7daf141242ca6ef86c4fb155c9447927e97c
+context-128k.jsonl,"Decode and VRAM at 128K context, with and without projector","272 W, -75 mV, 2200 MHz",bench-context.sh,12,15356,34173bd297860c24a70d313c7965884754be2b77dd8b0babd57df26ecd0992a6
+display-refresh-idle.jsonl,Idle power at 144 Hz vs 120 Hz,"272 W, -75 mV, 2200 MHz",bench-display-refresh.sh,6,2872,8d6cc0335760f63020667e479cc6ad9a13466423b347207aa698dfc8295b358a
+idle-power.jsonl,Idle GPU power baseline,factory and capped,bench-idle.sh,10,4805,db5617bc4467f165c5e0cda557df2d04fd68862786ee18f2d151059da7ccb929
+idle-with-projector.jsonl,Idle power with the vision projector loaded,"272 W, -75 mV, 2200 MHz",bench-idle-projector.sh,6,2860,76d1be3110037355ff626b3c0804694aa7e3b996ec65dd3c8227c4799d9a7764
+multiturn-session.jsonl,"Ten-turn session, replayed transcript","272 W, -75 mV, 2200 MHz",bench-multiturn.sh,17,47821,da0fed2aeb9823627e35c59ac052380c424ea0969d9eb2c50e7548157476af04
+perplexity-chunks.txt,"Per-chunk perplexity, wikitext-2 test split",factory,bench-idle.sh,616,6188,031372c19798b9f219aebd13ed4b5a3fc546f4a0ca11c8f8eedca73769f3ce10
+quality-keyed-hard.jsonl,Harder keyed variant of the same corpus,"272 W, -75 mV, 2200 MHz",bench-quality.sh,60,77430,517c7a3cc4f0a64f1b7bd83c2894143b2b17d886d7387fd1edaebf65f8a5d45a
+quality-keyed.jsonl,22 keyed retrieval tasks over a 50K corpus,"272 W, -75 mV, 2200 MHz",bench-quality.sh,72,75363,68584fc4886051010b7f135726bec95dbc51a22826eb68fa54de360f6d34cbb6
+quality-keys-hard.json,Answer keys for the harder keyed tasks,n/a,gen_quality_corpus_hard.py,10,1779,6121fadd375be07a31c58eecb81f8149500b37b458e85cbf7f86715a876fabc4
+quality-keys.json,Answer keys for the keyed retrieval tasks,n/a,gen_quality_corpus.py,12,1690,d32237422eba6af4c17f4f74c253cebe278a5239bf349eaf8f916f9720e9d2e3
+reference-sequence-ngram.json,Reference output-hash sequence the gate compares against,"272 W, -75 mV, 2200 MHz, ngram-map-k",soak-and-output-gate.sh,70,1120,c189e1169d3984aa788946dc99cf1c81514390a7df5b5435af5b5cfa6d3aa1e0
+reference-sequence-nospec.json,Reference output-hash sequence the gate compares against,"272 W, -75 mV, 2200 MHz, no speculation",soak-and-output-gate.sh,6,96,da7f984257d17099b8e1dc757c10a61e8ccb6b377f50930e38810bc988a4eac7
+single-shot.jsonl,"Single-request decode, n-gram on and off","272 W, -75 mV, 2200 MHz",bench-speculation.sh,12,12524,fa0ab2aa52a0c03cb36d935c0aae14d0391e2b59e74dfde9929b24372872525a
+soak-efficient-ngram-runs.jsonl,"30 min soak, per-request records and output hashes","272 W, -75 mV, 2200 MHz, ngram-map-k",soak-and-output-gate.sh,2,33873,4a897b44727b82e1cf1439d50f607d5470d2457379cb98a513bd25c51cea7079
+soak-efficient-ngram.jsonl,"30 min soak, summary record","272 W, -75 mV, 2200 MHz, ngram-map-k",soak-and-output-gate.sh,0,2100,d9d5b3a990e2eab662f15dbff53adba8c951aa63b31c4f97c1a58237b03f0255
+soak-efficient-nospec-runs.jsonl,"30 min soak, per-request records and output hashes","272 W, -75 mV, 2200 MHz, no speculation",soak-and-output-gate.sh,2,6500,22cee8896cf047d1c9dd90a5b6e1c91e92d773f4ff2011e37e9e9cebb270b519
+soak-efficient-nospec.jsonl,"30 min soak, summary record","272 W, -75 mV, 2200 MHz, no speculation",soak-and-output-gate.sh,0,1196,599ef71ab6693020d17ad34ac3e0989b6dc8369015545e2cc07d8b678b6ec3dc
+spec-variants-paired.jsonl,"Same variants run twice, hashes compared position by position","303 W, 0 mV, auto clock",bench-spec-variants.sh,8,8518,128c724c7415d3dcb168a64098c1ab7808c3123699ca309ef19bf5921a9180ff
+spec-vs-none.jsonl,"Speculative decoding variants, 20K prompt","303 W, 0 mV, auto clock",bench-speculation.sh,6,25974,ad1702b00aa8109163f5897af54f9ce0d55cceba42b917babe2fbf5e87d25b29
+vision.jsonl,"Vision prompts, Q8_0 vs BF16 projector","272 W, -75 mV, 2200 MHz",bench-speculation.sh,6,9337,cbddfa1d14fe1b391d41a465f76407dce2e9373a29603db23dce6ee3ef082207

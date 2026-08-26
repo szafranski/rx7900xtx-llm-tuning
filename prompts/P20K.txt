@@ -1,0 +1,1153 @@
+
+// ==== FILE: llama-adapter.cpp ====
+#include "llama-adapter.h"
+
+#include "llama-impl.h"
+#include "llama-mmap.h"
+#include "llama-model.h"
+
+#include <map>
+#include <cassert>
+#include <sstream>
+#include <stdexcept>
+
+// vec
+
+ggml_tensor * llama_adapter_cvec::tensor_for(int il) const {
+    if (il < 0 || il < layer_start || il > layer_end || (size_t) il >= tensors.size()) {
+        return nullptr;
+    }
+
+    return tensors[il];
+}
+
+ggml_tensor * llama_adapter_cvec::apply_to(ggml_context * ctx, ggml_tensor * cur, int  il) const {
+    ggml_tensor * layer_dir = tensor_for(il);
+    if (layer_dir != nullptr) {
+        cur = ggml_add(ctx, cur, layer_dir);
+    }
+
+    return cur;
+}
+
+bool llama_adapter_cvec::init(const llama_model & model) {
+    const auto & hparams = model.hparams;
+
+    GGML_ASSERT(tensors.empty());
+    GGML_ASSERT(ctxs.empty());
+    GGML_ASSERT(bufs.empty());
+
+    // create a context for each buffer type
+    std::map<ggml_backend_buffer_type_t, ggml_context *> ctx_map;
+    auto ctx_for_buft = [&](ggml_backend_buffer_type_t buft) -> ggml_context * {
+        auto it = ctx_map.find(buft);
+        if (it == ctx_map.end()) {
+            ggml_init_params params = {
+                /*.mem_size   =*/ hparams.n_layer()*ggml_tensor_overhead(),
+                /*.mem_buffer =*/ NULL,
+                /*.no_alloc   =*/ true,
+            };
+
+            ggml_context * ctx = ggml_init(params);
+            if (!ctx) {
+                return nullptr;
+            }
+
+            ctx_map[buft] = ctx;
+            ctxs.emplace_back(ctx);
+
+            return ctx;
+        }
+
+        return it->second;
+    };
+
+    // make tensors
+    tensors.reserve(hparams.n_layer());
+    tensors.push_back(nullptr); // there's never a tensor for layer 0
+    for (size_t il = 1; il < hparams.n_layer(); il++) {
+        ggml_backend_buffer_type_t buft = model.select_buft(il);
+        ggml_context * ctx = ctx_for_buft(buft);
+        if (!ctx) {
+            LLAMA_LOG_ERROR("%s: failed to allocate context for control vector\n", __func__);
+            return false;
+        }
+        ggml_tensor * tensor = ggml_new_tensor_1d(ctx, GGML_TYPE_F32, hparams.n_embd);
+        tensors.push_back(tensor);
+    }
+
+    // allocate tensors / buffers and zero
+    bufs.reserve(ctx_map.size());
+    for (auto it : ctx_map) {
+        ggml_backend_buffer_type_t buft = it.first;
+        ggml_context * ctx = it.second;
+        ggml_backend_buffer_t buf = ggml_backend_alloc_ctx_tensors_from_buft(ctx, buft);
+        if (!buf) {
+            LLAMA_LOG_ERROR("%s: failed to allocate buffer for control vector\n", __func__);
+            return false;
+        }
+        ggml_backend_buffer_clear(buf, 0);
+        bufs.emplace_back(buf);
+    }
+
+    return true;
+}
+
+bool llama_adapter_cvec::apply(
+        const llama_model & model,
+        const float * data,
+        size_t len,
+        int32_t n_embd,
+        int32_t il_start,
+        int32_t il_end) {
+    const auto & hparams = model.hparams;
+
+    if (data == nullptr) {
+        // disable the current control vector (but leave allocated for later)
+        layer_start = -1;
+        layer_end   = -1;
+        return true;
+    }
+
+    if (n_embd != (int) hparams.n_embd) {
+        LLAMA_LOG_ERROR("%s: control vector n_embd does not match model\n", __func__);
+        return false;
+    }
+
+    if (tensors.empty()) {
+        if (!init(model)) {
+            return false;
+        }
+    }
+
+    layer_start = il_start;
+    layer_end   = il_end;
+
+    for (size_t il = 1; il < hparams.n_layer(); il++) {
+        assert(tensors[il] != nullptr);
+
+        const size_t off = n_embd * (il - 1); // buffer doesn't have data for layer 0, since it's never present
+        if (off + n_embd <= len) {
+            ggml_backend_tensor_set(tensors[il], data + off, 0, n_embd * ggml_element_size(tensors[il]));
+        }
+    }
+
+    return true;
+}
+
+// lora
+
+llama_adapter_lora_weight * llama_adapter_lora::get_weight(ggml_tensor * w) {
+    const std::string name(w->name);
+
+    const auto pos = ab_map.find(name);
+    if (pos != ab_map.end()) {
+        return &pos->second;
+    }
+
+    return nullptr;
+}
+
+static void llama_adapter_lora_init_impl(llama_model & model, const char * path_lora, llama_adapter_lora & adapter) {
+    LLAMA_LOG_INFO("%s: loading lora adapter from '%s' ...\n", __func__, path_lora);
+
+    ggml_context * ctx_init;
+    gguf_init_params meta_gguf_params = {
+        /* .no_alloc = */ true,
+        /* .ctx      = */ &ctx_init,
+    };
+
+    gguf_context_ptr ctx_gguf { gguf_init_from_file(path_lora, meta_gguf_params) };
+    if (!ctx_gguf) {
+        throw std::runtime_error("failed to load lora adapter file from " + std::string(path_lora));
+    }
+
+    ggml_context_ptr ctx { ctx_init };
+
+    // check metadata
+    {
+        const gguf_context * gguf_ctx = ctx_gguf.get();
+
+        LLAMA_LOG_INFO("%s: Dumping metadata keys/values.\n", __func__);
+
+        // get metadata as string
+        for (int i = 0; i < gguf_get_n_kv(gguf_ctx); i++) {
+            gguf_type type = gguf_get_kv_type(gguf_ctx, i);
+            const std::string type_name =
+                type == GGUF_TYPE_ARRAY
+                ? format("%s[%s,%zu]", gguf_type_name(type), gguf_type_name(gguf_get_arr_type(gguf_ctx, i)), gguf_get_arr_n(gguf_ctx, i))
+                : gguf_type_name(type);
+            const char * name = gguf_get_key(gguf_ctx, i);
+            const std::string value = gguf_kv_to_str(gguf_ctx, i);
+
+            if (type != GGUF_TYPE_ARRAY) {
+                adapter.gguf_kv.emplace(name, value);
+            }
+
+            const size_t MAX_VALUE_LEN = 40;
+            std::string print_value = value.size() > MAX_VALUE_LEN ? format("%s...", value.substr(0, MAX_VALUE_LEN - 3).c_str()) : value;
+            replace_all(print_value, "\n", "\\n");
+
+            LLAMA_LOG_INFO("%s: - kv %3d: %42s %-16s = %s\n", __func__, i, name, type_name.c_str(), print_value.c_str());
+        }
+
+        auto get_kv_str = [&](const std::string & key) -> std::string {
+            int id = gguf_find_key(gguf_ctx, key.c_str());
+            return id < 0 ? "" : std::string(gguf_get_val_str(gguf_ctx, id));
+        };
+        auto get_kv_f32 = [&](const std::string & key) -> float {
+            int id = gguf_find_key(gguf_ctx, key.c_str());
+            return id < 0 ? 0.0f : gguf_get_val_f32(gguf_ctx, id);
+        };
+        LLM_KV llm_kv = LLM_KV(LLM_ARCH_UNKNOWN);
+
+        auto general_type = get_kv_str(llm_kv(LLM_KV_GENERAL_TYPE));
+        if (general_type != "adapter") {
+            throw std::runtime_error("expect general.type to be 'adapter', but got: " + general_type);
+        }
+
+        auto general_arch_str = get_kv_str(llm_kv(LLM_KV_GENERAL_ARCHITECTURE));
+        auto general_arch = llm_arch_from_string(general_arch_str);
+        if (general_arch != model.arch) {
+            throw std::runtime_error("model arch and LoRA arch mismatch");
+        }
+
+        auto adapter_type = get_kv_str(llm_kv(LLM_KV_ADAPTER_TYPE));
+        if (adapter_type != "lora") {
+            throw std::runtime_error("expect adapter.type to be 'lora', but got: " + adapter_type);
+        }
+
+        adapter.alpha = get_kv_f32(llm_kv(LLM_KV_ADAPTER_LORA_ALPHA));
+
+        // parse alora invocation sequence vector
+        const auto & key = llm_kv(LLM_KV_ADAPTER_ALORA_INVOCATION_TOKENS);
+        const int kid = gguf_find_key(ctx_gguf.get(), key.c_str());
+        if (kid >= 0) {
+            if (gguf_get_kv_type(ctx_gguf.get(), kid) != GGUF_TYPE_ARRAY) {
+                throw std::runtime_error("invalid gguf type for " + key);
+            }
+            const auto arr_type = gguf_get_arr_type(ctx_gguf.get(), kid);
+            if (arr_type != GGUF_TYPE_UINT32) {
+                throw std::runtime_error("invalid gguf element type for " + key);
+            }
+            const size_t seq_len = gguf_get_arr_n(ctx_gguf.get(), kid);
+            const void * data = gguf_get_arr_data(ctx_gguf.get(), kid);
+            adapter.alora_invocation_tokens.resize(seq_len);
+            std::copy(
+                (const llama_token *)data,
+                (const llama_token *)data + seq_len,
+                adapter.alora_invocation_tokens.begin());
+        }
+    }
+
+    int n_tensors = gguf_get_n_tensors(ctx_gguf.get());
+
+    // contexts for each buffer type
+    std::map<ggml_backend_buffer_type_t, ggml_context *> ctx_map;
+    auto ctx_for_buft = [&](ggml_backend_buffer_type_t buft) -> ggml_context * {
+        auto it = ctx_map.find(buft);
+        if (it == ctx_map.end()) {
+            // add a new context
+            ggml_init_params params = {
+                /*.mem_size   =*/ n_tensors*ggml_tensor_overhead(),
+                /*.mem_buffer =*/ NULL,
+                /*.no_alloc   =*/ true,
+            };
+            ggml_context * buft_ctx = ggml_init(params);
+            if (!buft_ctx) {
+                return nullptr;
+            }
+            ctx_map[buft] = buft_ctx;
+            adapter.ctxs.emplace_back(buft_ctx);
+            return buft_ctx;
+        };
+        return it->second;
+    };
+
+    // bundle lora_a and lora_b into pairs
+    std::map<std::string, llama_adapter_lora_weight> ab_map;
+    auto str_endswith = [](const std::string & str, const std::string & suffix) {
+        return str.size() >= suffix.size() && str.compare(str.size()-suffix.size(), suffix.size(), suffix) == 0;
+    };
+
+    for (ggml_tensor * cur = ggml_get_first_tensor(ctx.get()); cur; cur = ggml_get_next_tensor(ctx.get(), cur)) {
+        std::string name(cur->name);
+        if (str_endswith(name, ".lora_a")) {
+            replace_all(name, ".lora_a", "");
+            if (ab_map.find(name) == ab_map.end()) {
+                ab_map[name] = llama_adapter_lora_weight(cur, nullptr);
+            } else {
+                ab_map[name].a = cur;
+            }
+        } else if (str_endswith(name, ".lora_b")) {
+            replace_all(name, ".lora_b", "");
+            if (ab_map.find(name) == ab_map.end()) {
+                ab_map[name] = llama_adapter_lora_weight(nullptr, cur);
+            } else {
+                ab_map[name].b = cur;
+            }
+        } else if (str_endswith(name, "_norm.weight")) {
+            // TODO: add support for norm vector
+            // for now, we don't really care because most adapters still work fine without it
+            continue;
+        } else {
+            throw std::runtime_error("LoRA tensor '" + name + "' has unexpected suffix");
+        }
+    }
+
+    // get extra buffer types of the CPU
+    // TODO: a more general solution for non-CPU extra buft should be implemented in the future
+    //       ref: https://github.com/ggml-org/llama.cpp/pull/12593#pullrequestreview-2718659948
+    std::vector<ggml_backend_buffer_type_t> buft_extra;
+    {
+        auto * cpu_dev = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_CPU);
+        if (!cpu_dev) {
+            throw std::runtime_error(format("%s: no CPU backend found", __func__));
+        }
+        auto * cpu_reg = ggml_backend_dev_backend_reg(cpu_dev);
+
+        auto ggml_backend_dev_get_extra_bufts_fn = (ggml_backend_dev_get_extra_bufts_t)
+            ggml_backend_reg_get_proc_address(cpu_reg, "ggml_backend_dev_get_extra_bufts");
+
+        if (ggml_backend_dev_get_extra_bufts_fn) {
+            ggml_backend_buffer_type_t * extra_bufts = ggml_backend_dev_get_extra_bufts_fn(cpu_dev);
+            while (extra_bufts && *extra_bufts) {
+                buft_extra.emplace_back(*extra_bufts);
+                ++extra_bufts;
+            }
+        }
+    }
+
+    // add tensors
+    for (auto & it : ab_map) {
+        const std::string & name = it.first;
+        llama_adapter_lora_weight & w = it.second;
+        bool is_token_embd = str_endswith(name, "token_embd.weight");
+
+        if (!w.a || !w.b) {
+            throw std::runtime_error("LoRA tensor pair for '" + name + "' is missing one component");
+        }
+
+        // device buft and device ctx
+        const auto * model_tensor = model.get_tensor(name.c_str());
+        if (!model_tensor) {
+            throw std::runtime_error("LoRA tensor '" + name + "' does not exist in base model (hint: maybe wrong base model?)");
+        }
+
+        auto * buft = ggml_backend_buffer_get_type(model_tensor->buffer);
+
+        // do not load loras to extra buffer types (i.e. bufts for repacking) -> use the CPU in that case
+        for (auto & ex : buft_extra) {
+            if (ex == buft) {
+                LLAMA_LOG_WARN("%s: lora for '%s' cannot use buft '%s', fallback to CPU\n", __func__, model_tensor->name, ggml_backend_buft_name(buft));
+
+                auto * cpu_dev = ggml_backend_dev_by_type(GGML_BACKEND_DEVICE_TYPE_CPU);
+                if (!cpu_dev) {
+                    throw std::runtime_error(format("%s: no CPU backend found", __func__));
+                }
+                buft = ggml_backend_dev_buffer_type(cpu_dev);
+
+                break;
+            }
+        }
+
+        LLAMA_LOG_DEBUG("%s: lora for '%s' -> '%s'\n", __func__, model_tensor->name, ggml_backend_buft_name(buft));
+
+        ggml_context * dev_ctx = ctx_for_buft(buft);
+        // validate tensor shape
+        if (is_token_embd) {
+            // expect B to be non-transposed, A and B are flipped; see llm_build_inp_embd()
+            if (model_tensor->ne[0] != w.b->ne[1] || model_tensor->ne[1] != w.a->ne[1]) {
+                throw std::runtime_error("tensor '" + name + "' has incorrect shape (hint: maybe wrong base model?)");
+            }
+        } else {
+            if (model_tensor->ne[0] != w.a->ne[0] || model_tensor->ne[1] != w.b->ne[1]) {
+                throw std::runtime_error("tensor '" + name + "' has incorrect shape (hint: maybe wrong base model?)");
+            }
+            if (w.a->ne[1] != w.b->ne[0]) {
+                throw std::runtime_error("lora_a tensor is not transposed (hint: adapter from \"finetune\" example is no longer supported)");
+            }
+        }
+
+        // save tensor to adapter
+        ggml_tensor * tensor_a = ggml_dup_tensor(dev_ctx, w.a);
+        ggml_tensor * tensor_b = ggml_dup_tensor(dev_ctx, w.b);
+        ggml_set_name(tensor_a, w.a->name);
+        ggml_set_name(tensor_b, w.b->name);
+        adapter.ab_map[name] = llama_adapter_lora_weight(tensor_a, tensor_b);
+    }
+
+    // allocate tensors / buffers and zero
+    {
+        adapter.ctxs.reserve(ctx_map.size());
+        adapter.bufs.reserve(ctx_map.size());
+        for (auto & it : ctx_map) {
+            ggml_backend_buffer_type_t buft = it.first;
+            ggml_context * ctx_dev = it.second;
+            ggml_backend_buffer_ptr buf { ggml_backend_alloc_ctx_tensors_from_buft(ctx_dev, buft) };
+            if (!buf) {
+                throw std::runtime_error("failed to allocate buffer for lora adapter\n");
+            }
+            LLAMA_LOG_INFO("%s: %10s LoRA buffer size = %8.2f MiB\n", __func__, ggml_backend_buffer_name(buf.get()), ggml_backend_buffer_get_size(buf.get())/1024.0/1024.0);
+            adapter.bufs.emplace_back(std::move(buf));
+        }
+    }
+
+    // set tensor data
+    {
+        llama_file gguf_file(path_lora, "rb");
+        std::vector<uint8_t> read_buf;
+        auto set_tensor = [&](ggml_tensor * orig, ggml_tensor * dev) {
+            size_t offs = gguf_get_data_offset(ctx_gguf.get()) + gguf_get_tensor_offset(ctx_gguf.get(), gguf_find_tensor(ctx_gguf.get(), orig->name));
+            size_t size = ggml_nbytes(orig);
+            read_buf.resize(size);
+            gguf_file.seek(offs, SEEK_SET);
+            gguf_file.read_raw(read_buf.data(), size);
+            ggml_backend_tensor_set(dev, read_buf.data(), 0, size);
+        };
+        for (auto & it : adapter.ab_map) {
+            auto orig = ab_map[it.first];
+            auto dev  = it.second;
+            set_tensor(orig.a, dev.a);
+            set_tensor(orig.b, dev.b);
+        }
+    }
+
+    // register adapter with model
+    model.loras.insert(&adapter);
+
+    LLAMA_LOG_INFO("%s: loaded %zu tensors from lora file\n", __func__, adapter.ab_map.size()*2);
+}
+
+llama_adapter_lora * llama_adapter_lora_init(llama_model * model, const char * path_lora) {
+    llama_adapter_lora * adapter = new llama_adapter_lora(model);
+
+    try {
+        llama_adapter_lora_init_impl(*model, path_lora, *adapter);
+        return adapter;
+    } catch (const std::exception & err) {
+        LLAMA_LOG_ERROR("%s: failed to apply lora adapter: %s\n", __func__, err.what());
+
+        delete adapter;
+    }
+
+    return nullptr;
+}
+
+int32_t llama_adapter_meta_val_str(const llama_adapter_lora * adapter, const char * key, char * buf, size_t buf_size) {
+    const auto & it = adapter->gguf_kv.find(key);
+    if (it == adapter->gguf_kv.end()) {
+        if (buf_size > 0) {
+            buf[0] = '\0';
+        }
+        return -1;
+    }
+    return snprintf(buf, buf_size, "%s", it->second.c_str());
+}
+
+int32_t llama_adapter_meta_count(const llama_adapter_lora * adapter) {
+    return (int)adapter->gguf_kv.size();
+}
+
+int32_t llama_adapter_meta_key_by_index(const llama_adapter_lora * adapter, int i, char * buf, size_t buf_size) {
+    if (i < 0 || i >= (int)adapter->gguf_kv.size()) {
+        if (buf_size > 0) {
+            buf[0] = '\0';
+        }
+        return -1;
+    }
+    auto it = adapter->gguf_kv.begin();
+    std::advance(it, i);
+    return snprintf(buf, buf_size, "%s", it->first.c_str());
+}
+
+int32_t llama_adapter_meta_val_str_by_index(const llama_adapter_lora * adapter, int32_t i, char * buf, size_t buf_size) {
+    if (i < 0 || i >= (int)adapter->gguf_kv.size()) {
+        if (buf_size > 0) {
+            buf[0] = '\0';
+        }
+        return -1;
+    }
+    auto it = adapter->gguf_kv.begin();
+    std::advance(it, i);
+    return snprintf(buf, buf_size, "%s", it->second.c_str());
+}
+
+void llama_adapter_lora_free(llama_adapter_lora * adapter) {
+    if (adapter == nullptr) {
+        return;
+    }
+
+    if (adapter->model != nullptr) {
+        adapter->model->loras.erase(adapter);
+        adapter->model = nullptr;
+    }
+
+    delete adapter;
+}
+
+uint64_t llama_adapter_get_alora_n_invocation_tokens(const struct llama_adapter_lora * adapter) {
+    if (!adapter) {
+        return 0;
+    }
+    return adapter->alora_invocation_tokens.size();
+}
+
+const llama_token * llama_adapter_get_alora_invocation_tokens(const llama_adapter_lora * adapter) {
+    GGML_ASSERT(adapter);
+    return adapter->alora_invocation_tokens.data();
+}
+
+// ==== FILE: llama-arch.cpp ====
+#include "llama-arch.h"
+
+#include "llama-impl.h"
+
+#include <map>
+#include <vector>
+
+static const std::map<llm_arch, const char *> LLM_ARCH_NAMES = {
+    { LLM_ARCH_CLIP,             "clip"             }, // dummy, only used by llama-quantize
+    { LLM_ARCH_LLAMA,            "llama"            },
+    { LLM_ARCH_LLAMA4,           "llama4"           },
+    { LLM_ARCH_DECI,             "deci"             },
+    { LLM_ARCH_FALCON,           "falcon"           },
+    { LLM_ARCH_GROK,             "grok"             },
+    { LLM_ARCH_GPT2,             "gpt2"             },
+    { LLM_ARCH_GPTJ,             "gptj"             },
+    { LLM_ARCH_GPTNEOX,          "gptneox"          },
+    { LLM_ARCH_MPT,              "mpt"              },
+    { LLM_ARCH_BAICHUAN,         "baichuan"         },
+    { LLM_ARCH_STARCODER,        "starcoder"        },
+    { LLM_ARCH_REFACT,           "refact"           },
+    { LLM_ARCH_BERT,             "bert"             },
+    { LLM_ARCH_MODERN_BERT,      "modern-bert"      },
+    { LLM_ARCH_NOMIC_BERT,       "nomic-bert"       },
+    { LLM_ARCH_NOMIC_BERT_MOE,   "nomic-bert-moe"   },
+    { LLM_ARCH_NEO_BERT,         "neo-bert"         },
+    { LLM_ARCH_JINA_BERT_V2,     "jina-bert-v2"     },
+    { LLM_ARCH_JINA_BERT_V3,     "jina-bert-v3"     },
+    { LLM_ARCH_EUROBERT,         "eurobert"         },
+    { LLM_ARCH_BLOOM,            "bloom"            },
+    { LLM_ARCH_STABLELM,         "stablelm"         },
+    { LLM_ARCH_QWEN,             "qwen"             },
+    { LLM_ARCH_QWEN2,            "qwen2"            },
+    { LLM_ARCH_QWEN2MOE,         "qwen2moe"         },
+    { LLM_ARCH_QWEN2VL,          "qwen2vl"          },
+    { LLM_ARCH_QWEN3,            "qwen3"            },
+    { LLM_ARCH_QWEN3MOE,         "qwen3moe"         },
+    { LLM_ARCH_QWEN3NEXT,        "qwen3next"        },
+    { LLM_ARCH_QWEN3VL,          "qwen3vl"          },
+    { LLM_ARCH_QWEN3VLMOE,       "qwen3vlmoe"       },
+    { LLM_ARCH_QWEN35,           "qwen35"           },
+    { LLM_ARCH_QWEN35MOE,        "qwen35moe"        },
+    { LLM_ARCH_PHI2,             "phi2"             },
+    { LLM_ARCH_PHI3,             "phi3"             },
+    { LLM_ARCH_PHIMOE,           "phimoe"           },
+    { LLM_ARCH_PLAMO,            "plamo"            },
+    { LLM_ARCH_PLAMO2,           "plamo2"           },
+    { LLM_ARCH_PLAMO3,           "plamo3"           },
+    { LLM_ARCH_CODESHELL,        "codeshell"        },
+    { LLM_ARCH_ORION,            "orion"            },
+    { LLM_ARCH_INTERNLM2,        "internlm2"        },
+    { LLM_ARCH_MINICPM,          "minicpm"          },
+    { LLM_ARCH_MINICPM3,         "minicpm3"         },
+    { LLM_ARCH_GEMMA,            "gemma"            },
+    { LLM_ARCH_GEMMA2,           "gemma2"           },
+    { LLM_ARCH_GEMMA3,           "gemma3"           },
+    { LLM_ARCH_GEMMA3N,          "gemma3n"          },
+    { LLM_ARCH_GEMMA4,           "gemma4"           },
+    { LLM_ARCH_GEMMA4_ASSISTANT, "gemma4-assistant" },
+    { LLM_ARCH_GEMMA_EMBEDDING,  "gemma-embedding"  },
+    { LLM_ARCH_STARCODER2,       "starcoder2"       },
+    { LLM_ARCH_MAMBA,            "mamba"            },
+    { LLM_ARCH_MAMBA2,           "mamba2"           },
+    { LLM_ARCH_JAMBA,            "jamba"            },
+    { LLM_ARCH_FALCON_H1,        "falcon-h1"        },
+    { LLM_ARCH_XVERSE,           "xverse"           },
+    { LLM_ARCH_COMMAND_R,        "command-r"        },
+    { LLM_ARCH_COHERE2,          "cohere2"          },
+    { LLM_ARCH_COHERE2MOE,       "cohere2moe"       },
+    { LLM_ARCH_DBRX,             "dbrx"             },
+    { LLM_ARCH_OLMO,             "olmo"             },
+    { LLM_ARCH_OLMO2,            "olmo2"            },
+    { LLM_ARCH_OLMOE,            "olmoe"            },
+    { LLM_ARCH_MUSE_GLIMMER,     "muse-glimmer"     },
+    { LLM_ARCH_OPENELM,          "openelm"          },
+    { LLM_ARCH_ARCTIC,           "arctic"           },
+    { LLM_ARCH_DEEPSEEK,         "deepseek"         },
+    { LLM_ARCH_DEEPSEEK2,        "deepseek2"        },
+    { LLM_ARCH_DEEPSEEK2OCR,     "deepseek2-ocr"    },
+    { LLM_ARCH_DEEPSEEK32,       "deepseek32"       },
+    { LLM_ARCH_DEEPSEEK4,        "deepseek4"        },
+    { LLM_ARCH_CHATGLM,          "chatglm"          },
+    { LLM_ARCH_GLM4,             "glm4"             },
+    { LLM_ARCH_GLM4_MOE,         "glm4moe"          },
+    { LLM_ARCH_GLM_DSA,          "glm-dsa"          },
+    { LLM_ARCH_BITNET,           "bitnet"           },
+    { LLM_ARCH_T5,               "t5"               },
+    { LLM_ARCH_T5ENCODER,        "t5encoder"        },
+    { LLM_ARCH_JAIS,             "jais"             },
+    { LLM_ARCH_JAIS2,            "jais2"            },
+    { LLM_ARCH_NEMOTRON,         "nemotron"         },
+    { LLM_ARCH_NEMOTRON_H,       "nemotron_h"       },
+    { LLM_ARCH_NEMOTRON_H_MOE,   "nemotron_h_moe"   },
+    { LLM_ARCH_EXAONE,           "exaone"           },
+    { LLM_ARCH_EXAONE4,          "exaone4"          },
+    { LLM_ARCH_EXAONE_MOE,       "exaone-moe"       },
+    { LLM_ARCH_RWKV6,            "rwkv6"            },
+    { LLM_ARCH_RWKV6QWEN2,       "rwkv6qwen2"       },
+    { LLM_ARCH_RWKV7,            "rwkv7"            },
+    { LLM_ARCH_ARWKV7,           "arwkv7"           },
+    { LLM_ARCH_GRANITE,          "granite"          },
+    { LLM_ARCH_GRANITE_MOE,      "granitemoe"       },
+    { LLM_ARCH_GRANITE_HYBRID,   "granitehybrid"    },
+    { LLM_ARCH_CHAMELEON,        "chameleon"        },
+    { LLM_ARCH_WAVTOKENIZER_DEC, "wavtokenizer-dec" },
+    { LLM_ARCH_PLM,              "plm"              },
+    { LLM_ARCH_BAILINGMOE,       "bailingmoe"       },
+    { LLM_ARCH_BAILINGMOE2,      "bailingmoe2"      },
+    { LLM_ARCH_DOTS1,            "dots1"            },
+    { LLM_ARCH_ARCEE,            "arcee"            },
+    { LLM_ARCH_AFMOE,            "afmoe"            },
+    { LLM_ARCH_LAGUNA,           "laguna"           },
+    { LLM_ARCH_ERNIE4_5,         "ernie4_5"         },
+    { LLM_ARCH_ERNIE4_5_MOE,     "ernie4_5-moe"     },
+    { LLM_ARCH_HUNYUAN_MOE,      "hunyuan-moe"      },
+    { LLM_ARCH_HUNYUAN_DENSE,    "hunyuan-dense"    },
+    { LLM_ARCH_HUNYUAN_VL,       "hunyuan_vl"       },
+    { LLM_ARCH_HY_V3,            "hy_v3"            },
+    { LLM_ARCH_SMOLLM3,          "smollm3"          },
+    { LLM_ARCH_OPENAI_MOE,       "gpt-oss"          },
+    { LLM_ARCH_LFM2,             "lfm2"             },
+    { LLM_ARCH_LFM2MOE,          "lfm2moe"          },
+    { LLM_ARCH_DREAM,            "dream"            },
+    { LLM_ARCH_SMALLTHINKER,     "smallthinker"     },
+    { LLM_ARCH_LLADA,            "llada"            },
+    { LLM_ARCH_LLADA_MOE,        "llada-moe"        },
+    { LLM_ARCH_SEED_OSS,         "seed_oss"         },
+    { LLM_ARCH_GROVEMOE,         "grovemoe"         },
+    { LLM_ARCH_APERTUS,          "apertus"          },
+    { LLM_ARCH_MINIMAX_M2,       "minimax-m2"       },
+    { LLM_ARCH_MINIMAX_M3,       "minimax-m3"       },
+    { LLM_ARCH_COGVLM,           "cogvlm"           },
+    { LLM_ARCH_RND1,             "rnd1"             },
+    { LLM_ARCH_PANGU_EMBED,      "pangu-embedded"   },
+    { LLM_ARCH_MISTRAL3,         "mistral3"         },
+    { LLM_ARCH_EAGLE3,           "eagle3"           },
+    { LLM_ARCH_DFLASH,           "dflash"           },
+    { LLM_ARCH_MISTRAL4,         "mistral4"         },
+    { LLM_ARCH_PADDLEOCR,        "paddleocr"        },
+    { LLM_ARCH_MIMO2,            "mimo2"            },
+    { LLM_ARCH_STEP35,           "step35"           },
+    { LLM_ARCH_LLAMA_EMBED,      "llama-embed"      },
+    { LLM_ARCH_MAINCODER,        "maincoder"        },
+    { LLM_ARCH_KIMI_LINEAR,      "kimi-linear"      },
+    { LLM_ARCH_TALKIE,           "talkie"           },
+    { LLM_ARCH_MELLUM,           "mellum"           },
+    { LLM_ARCH_NANBEIGE,         "nanbeige"         },
+    { LLM_ARCH_QWEN3TTS,         "qwen3tts"         },
+    { LLM_ARCH_UNKNOWN,          "(unknown)"        },
+};
+
+static const std::map<llm_kv, const char *> LLM_KV_NAMES = {
+    { LLM_KV_GENERAL_TYPE,                     "general.type"                          },
+    { LLM_KV_GENERAL_ARCHITECTURE,             "general.architecture"                  },
+    { LLM_KV_GENERAL_QUANTIZATION_VERSION,     "general.quantization_version"          },
+    { LLM_KV_GENERAL_ALIGNMENT,                "general.alignment"                     },
+    { LLM_KV_GENERAL_FILE_TYPE,                "general.file_type"                     },
+    { LLM_KV_GENERAL_SAMPLING_SEQUENCE,        "general.sampling.sequence"             },
+    { LLM_KV_GENERAL_SAMPLING_TOP_K,           "general.sampling.top_k"                },
+    { LLM_KV_GENERAL_SAMPLING_TOP_P,           "general.sampling.top_p"                },
+    { LLM_KV_GENERAL_SAMPLING_MIN_P,           "general.sampling.min_p"                },
+    { LLM_KV_GENERAL_SAMPLING_XTC_PROBABILITY, "general.sampling.xtc_probability"      },
+    { LLM_KV_GENERAL_SAMPLING_XTC_THRESHOLD,   "general.sampling.xtc_threshold"        },
+    { LLM_KV_GENERAL_SAMPLING_TEMP,            "general.sampling.temp"                 },
+    { LLM_KV_GENERAL_SAMPLING_PENALTY_LAST_N,  "general.sampling.penalty_last_n"       },
+    { LLM_KV_GENERAL_SAMPLING_PENALTY_REPEAT,  "general.sampling.penalty_repeat"       },
+    { LLM_KV_GENERAL_SAMPLING_MIROSTAT,        "general.sampling.mirostat"             },
+    { LLM_KV_GENERAL_SAMPLING_MIROSTAT_TAU,    "general.sampling.mirostat_tau"         },
+    { LLM_KV_GENERAL_SAMPLING_MIROSTAT_ETA,    "general.sampling.mirostat_eta"         },
+    { LLM_KV_GENERAL_NAME,                     "general.name"                          },
+    { LLM_KV_GENERAL_AUTHOR,                   "general.author"                        },
+    { LLM_KV_GENERAL_VERSION,                  "general.version"                       },
+    { LLM_KV_GENERAL_URL,                      "general.url"                           },
+    { LLM_KV_GENERAL_DESCRIPTION,              "general.description"                   },
+    { LLM_KV_GENERAL_LICENSE,                  "general.license"                       },
+    { LLM_KV_GENERAL_SOURCE_URL,               "general.source.url"                    },
+    { LLM_KV_GENERAL_SOURCE_HF_REPO,           "general.source.huggingface.repository" },
+
+    { LLM_KV_VOCAB_SIZE,                        "%s.vocab_size"                        },
+    { LLM_KV_CONTEXT_LENGTH,                    "%s.context_length"                    },
+    { LLM_KV_EMBEDDING_LENGTH,                  "%s.embedding_length"                  },
+    { LLM_KV_EMBEDDING_LENGTH_OUT,              "%s.embedding_length_out"              },
+    { LLM_KV_EMBEDDING_LENGTH_PER_LAYER,        "%s.embedding_length_per_layer_input"  },
+    { LLM_KV_FEATURES_LENGTH,                   "%s.features_length"                   },
+    { LLM_KV_BLOCK_COUNT,                       "%s.block_count"                       },
+    { LLM_KV_LEADING_DENSE_BLOCK_COUNT,         "%s.leading_dense_block_count"         },
+    { LLM_KV_FEED_FORWARD_LENGTH,               "%s.feed_forward_length"               },
+    { LLM_KV_EXPERT_FEED_FORWARD_LENGTH,        "%s.expert_feed_forward_length"        },
+    { LLM_KV_EXPERT_SHARED_FEED_FORWARD_LENGTH, "%s.expert_shared_feed_forward_length" },
+    { LLM_KV_EXPERT_CHUNK_FEED_FORWARD_LENGTH,  "%s.expert_chunk_feed_forward_length"  },
+    { LLM_KV_SWIGLU_CLAMP_EXP,                  "%s.swiglu_clamp_exp"                  },
+    { LLM_KV_SWIGLU_CLAMP_SHEXP,                "%s.swiglu_clamp_shexp"                },
+    { LLM_KV_USE_PARALLEL_RESIDUAL,             "%s.use_parallel_residual"             },
+    { LLM_KV_TENSOR_DATA_LAYOUT,                "%s.tensor_data_layout"                },
+    { LLM_KV_EXPERT_COUNT,                      "%s.expert_count"                      },
+    { LLM_KV_EXPERT_USED_COUNT,                 "%s.expert_used_count"                 },
+    { LLM_KV_EXPERT_SHARED_COUNT,               "%s.expert_shared_count"               },
+    { LLM_KV_EXPERT_GROUP_COUNT,                "%s.expert_group_count"                },
+    { LLM_KV_EXPERT_GROUP_USED_COUNT,           "%s.expert_group_used_count"           },
+    { LLM_KV_EXPERT_WEIGHTS_SCALE,              "%s.expert_weights_scale"              },
+    { LLM_KV_EXPERT_WEIGHTS_NORM,               "%s.expert_weights_norm"               },
+    { LLM_KV_EXPERT_GATING_FUNC,                "%s.expert_gating_func"                },
+    { LLM_KV_EXPERT_GROUP_SCALE,                "%s.expert_group_scale"                },
+    { LLM_KV_EXPERTS_PER_GROUP,                 "%s.experts_per_group"                 },
+    { LLM_KV_MOE_EVERY_N_LAYERS,                "%s.moe_every_n_layers"                },
+    { LLM_KV_MOE_LATENT_SIZE,                   "%s.moe_latent_size"                   },
+    { LLM_KV_NEXTN_PREDICT_LAYERS,              "%s.nextn_predict_layers"              },
+    { LLM_KV_NUM_DEEPSTACK_LAYERS,              "%s.n_deepstack_layers"                },
+    { LLM_KV_DEEPSTACK_MAPPING,                 "%s.deepstack_mapping"                 },
+    { LLM_KV_HIDDEN_ACT,                        "%s.hidden_activation"                 },
+    { LLM_KV_POOLING_TYPE,                      "%s.pooling_type"                      },
+    { LLM_KV_LOGIT_SCALE,                       "%s.logit_scale"                       },
+    { LLM_KV_DECODER_START_TOKEN_ID,            "%s.decoder_start_token_id"            },
+    { LLM_KV_DECODER_BLOCK_COUNT,               "%s.decoder_block_count"               },
+    { LLM_KV_ATTN_LOGIT_SOFTCAPPING,            "%s.attn_logit_softcapping"            },
+    { LLM_KV_ROUTER_LOGIT_SOFTCAPPING,          "%s.router_logit_softcapping"          },
+    { LLM_KV_FINAL_LOGIT_SOFTCAPPING,           "%s.final_logit_softcapping"           },
+    { LLM_KV_SWIN_NORM,                         "%s.swin_norm"                         },
+    { LLM_KV_RESCALE_EVERY_N_LAYERS,            "%s.rescale_every_n_layers"            },
+    { LLM_KV_TIME_MIX_EXTRA_DIM,                "%s.time_mix_extra_dim"                },
+    { LLM_KV_TIME_DECAY_EXTRA_DIM,              "%s.time_decay_extra_dim"              },
+    { LLM_KV_RESIDUAL_SCALE,                    "%s.residual_scale"                    },
+    { LLM_KV_EMBEDDING_SCALE,                   "%s.embedding_scale"                   },
+    { LLM_KV_TOKEN_SHIFT_COUNT,                 "%s.token_shift_count"                 },
+    { LLM_KV_INTERLEAVE_MOE_LAYER_STEP,         "%s.interleave_moe_layer_step"         },
+    { LLM_KV_FULL_ATTENTION_INTERVAL,           "%s.full_attention_interval"           },
+    { LLM_KV_NUM_LOOPS,                         "%s.num_loops"                         },
+    { LLM_KV_SKIP_LOOP_FINAL_NORM,              "%s.skip_loop_final_norm"              },
+
+    { LLM_KV_ATTENTION_HEAD_COUNT,                   "%s.attention.head_count"                   },
+    { LLM_KV_ATTENTION_HEAD_COUNT_KV,                "%s.attention.head_count_kv"                },
+    { LLM_KV_ATTENTION_MAX_ALIBI_BIAS,               "%s.attention.max_alibi_bias"               },
+    { LLM_KV_ATTENTION_CLAMP_KQV,                    "%s.attention.clamp_kqv"                    },
+    { LLM_KV_ATTENTION_KEY_LENGTH,                   "%s.attention.key_length"                   },
+    { LLM_KV_ATTENTION_VALUE_LENGTH,                 "%s.attention.value_length"                 },
+    { LLM_KV_ATTENTION_LAYERNORM_EPS,                "%s.attention.layer_norm_epsilon"           },
+    { LLM_KV_ATTENTION_LAYERNORM_RMS_EPS,            "%s.attention.layer_norm_rms_epsilon"       },
+    { LLM_KV_ATTENTION_GROUPNORM_EPS,                "%s.attention.group_norm_epsilon"           },
+    { LLM_KV_ATTENTION_GROUPNORM_GROUPS,             "%s.attention.group_norm_groups"            },
+    { LLM_KV_ATTENTION_CAUSAL,                       "%s.attention.causal"                       },
+    { LLM_KV_ATTENTION_Q_LORA_RANK,                  "%s.attention.q_lora_rank"                  },
+    { LLM_KV_ATTENTION_KV_LORA_RANK,                 "%s.attention.kv_lora_rank"                 },
+    { LLM_KV_ATTENTION_DECAY_LORA_RANK,              "%s.attention.decay_lora_rank"              },
+    { LLM_KV_ATTENTION_ICLR_LORA_RANK,               "%s.attention.iclr_lora_rank"               },
+    { LLM_KV_ATTENTION_VALUE_RESIDUAL_MIX_LORA_RANK, "%s.attention.value_residual_mix_lora_rank" },
+    { LLM_KV_ATTENTION_GATE_LORA_RANK,               "%s.attention.gate_lora_rank"               },
+    { LLM_KV_ATTENTION_RELATIVE_BUCKETS_COUNT,       "%s.attention.relative_buckets_count"       },
+    { LLM_KV_ATTENTION_SLIDING_WINDOW,               "%s.attention.sliding_window"               },
+    { LLM_KV_ATTENTION_SLIDING_WINDOW_PATTERN,       "%s.attention.sliding_window_pattern"       },
+    { LLM_KV_ATTENTION_SCALE,                        "%s.attention.scale"                        },
+    { LLM_KV_ATTENTION_OUTPUT_SCALE,                 "%s.attention.output_scale"                 },
+    { LLM_KV_ATTENTION_VALUE_SCALE,                  "%s.attention.value_scale"                  },
+    { LLM_KV_ATTENTION_TEMPERATURE_LENGTH,           "%s.attention.temperature_length"           },
+    { LLM_KV_ATTENTION_TEMPERATURE_SCALE,            "%s.attention.temperature_scale"            },
+    { LLM_KV_ATTENTION_KEY_LENGTH_MLA,               "%s.attention.key_length_mla"               },
+    { LLM_KV_ATTENTION_VALUE_LENGTH_MLA,             "%s.attention.value_length_mla"             },
+    { LLM_KV_ATTENTION_KEY_LENGTH_SWA,               "%s.attention.key_length_swa"               },
+    { LLM_KV_ATTENTION_VALUE_LENGTH_SWA,             "%s.attention.value_length_swa"             },
+    { LLM_KV_ATTENTION_INDEXER_HEAD_COUNT,           "%s.attention.indexer.head_count"           },
+    { LLM_KV_ATTENTION_INDEXER_KEY_LENGTH,           "%s.attention.indexer.key_length"           },
+    { LLM_KV_ATTENTION_INDEXER_TOP_K,                "%s.attention.indexer.top_k"                },
+    { LLM_KV_ATTENTION_INDEXER_BLOCK_SIZE,           "%s.attention.indexer.block_size"           },
+    { LLM_KV_ATTENTION_INDEXER_LOCAL_BLOCKS,         "%s.attention.indexer.local_blocks"         },
+    { LLM_KV_ATTENTION_INDEXER_TYPES,                "%s.attention.indexer.types"                },
+    { LLM_KV_ATTENTION_OUTPUT_GROUP_COUNT,           "%s.attention.output_group_count"           },
+    { LLM_KV_ATTENTION_OUTPUT_LORA_RANK,             "%s.attention.output_lora_rank"             },
+    { LLM_KV_ATTENTION_COMPRESS_ROPE_FREQ_BASE,      "%s.attention.compress_rope_freq_base"      },
+    { LLM_KV_ATTENTION_COMPRESS_RATIOS,              "%s.attention.compress_ratios"              },
+    { LLM_KV_ATTENTION_SHARED_KV_LAYERS,             "%s.attention.shared_kv_layers"             },
+    { LLM_KV_ATTENTION_RECURRENT_LAYERS,             "%s.attention.recurrent_layers"             },
+
+    { LLM_KV_HYPER_CONNECTION_COUNT,                 "%s.hyper_connection.count"                 },
+    { LLM_KV_HYPER_CONNECTION_SINKHORN_ITERATIONS,   "%s.hyper_connection.sinkhorn_iterations"   },
+    { LLM_KV_HYPER_CONNECTION_EPSILON,               "%s.hyper_connection.epsilon"               },
+
+    { LLM_KV_HASH_LAYER_COUNT,                       "%s.hash_layer_count"                       },
+
+    { LLM_KV_ROPE_DIMENSION_COUNT,           "%s.rope.dimension_count"                 },
+    { LLM_KV_ROPE_DIMENSION_COUNT_SWA,       "%s.rope.dimension_count_swa"             },
+    { LLM_KV_ROPE_DIMENSION_SECTIONS,        "%s.rope.dimension_sections"              },
+    { LLM_KV_ROPE_FREQ_BASE,                 "%s.rope.freq_base"                       },
+    { LLM_KV_ROPE_FREQ_BASE_SWA,             "%s.rope.freq_base_swa"                   },
+    { LLM_KV_ROPE_SCALE_LINEAR,              "%s.rope.scale_linear"                    },
+    { LLM_KV_ROPE_SCALING_TYPE,              "%s.rope.scaling.type"                    },
+    { LLM_KV_ROPE_SCALING_FACTOR,            "%s.rope.scaling.factor"                  },
+    { LLM_KV_ROPE_SCALING_ALPHA,             "%s.rope.scaling.alpha"                   },
+    { LLM_KV_ROPE_SCALING_ATTN_FACTOR,       "%s.rope.scaling.attn_factor"             },
+    { LLM_KV_ROPE_SCALING_ORIG_CTX_LEN,      "%s.rope.scaling.original_context_length" },
+    { LLM_KV_ROPE_SCALING_FINETUNED,         "%s.rope.scaling.finetuned"               },
+    { LLM_KV_ROPE_SCALING_YARN_LOG_MUL,      "%s.rope.scaling.yarn_log_multiplier"     },
+    { LLM_KV_ROPE_SCALING_YARN_EXT_FACTOR,   "%s.rope.scaling.yarn_ext_factor"         },
+    { LLM_KV_ROPE_SCALING_YARN_ATTN_FACTOR,  "%s.rope.scaling.yarn_attn_factor"        },
+    { LLM_KV_ROPE_SCALING_YARN_BETA_FAST,    "%s.rope.scaling.yarn_beta_fast"          },
+    { LLM_KV_ROPE_SCALING_YARN_BETA_SLOW,    "%s.rope.scaling.yarn_beta_slow"          },
+
+    { LLM_KV_SPLIT_NO,            "split.no"            },
+    { LLM_KV_SPLIT_COUNT,         "split.count"         },
+    { LLM_KV_SPLIT_TENSORS_COUNT, "split.tensors.count" },
+
+    { LLM_KV_SSM_CONV_KERNEL,    "%s.ssm.conv_kernel"    },
+    { LLM_KV_SSM_INNER_SIZE,     "%s.ssm.inner_size"     },
+    { LLM_KV_SSM_STATE_SIZE,     "%s.ssm.state_size"     },
+    { LLM_KV_SSM_TIME_STEP_RANK, "%s.ssm.time_step_rank" },
+    { LLM_KV_SSM_GROUP_COUNT,    "%s.ssm.group_count"    },
+    { LLM_KV_SSM_DT_B_C_RMS,     "%s.ssm.dt_b_c_rms"     },
+
+    { LLM_KV_KDA_HEAD_DIM, "%s.kda.head_dim" },
+
+    { LLM_KV_WKV_HEAD_SIZE, "%s.wkv.head_size" },
+
+    { LLM_KV_POSNET_EMBEDDING_LENGTH, "%s.posnet.embedding_length" },
+    { LLM_KV_POSNET_BLOCK_COUNT,      "%s.posnet.block_count"      },
+
+    { LLM_KV_CONVNEXT_EMBEDDING_LENGTH, "%s.convnext.embedding_length" },
+    { LLM_KV_CONVNEXT_BLOCK_COUNT,      "%s.convnext.block_count"      },
+
+    { LLM_KV_CLASSIFIER_OUTPUT_LABELS, "%s.classifier.output_labels" },
+
+    { LLM_KV_TARGET_LAYERS,         "%s.target_layers"        },
+    { LLM_KV_TARGET_HIDDEN_SIZE,    "%s.target_hidden_size"   },
+    { LLM_KV_NORM_BEFORE_RESIDUAL,  "%s.norm_before_residual" },
+    { LLM_KV_NORM_BEFORE_FC,        "%s.norm_before_fc"       },
+    { LLM_KV_DECODER_ARCH,          "%s.decoder_arch"         },
+
+    { LLM_KV_SHORTCONV_L_CACHE, "%s.shortconv.l_cache" },
+    // sentence-transformers dense modules feature dims
+    { LLM_KV_DENSE_2_FEAT_IN,        "%s.dense_2_feat_in"  },
+    { LLM_KV_DENSE_2_FEAT_OUT,       "%s.dense_2_feat_out" },
+    { LLM_KV_DENSE_3_FEAT_IN,        "%s.dense_3_feat_in"  },
+    { LLM_KV_DENSE_3_FEAT_OUT,       "%s.dense_3_feat_out" },
+
+    { LLM_KV_TOKENIZER_MODEL,                    "tokenizer.ggml.model"                    },
+    { LLM_KV_TOKENIZER_PRE,                      "tokenizer.ggml.pre"                      },
+    { LLM_KV_TOKENIZER_LIST,                     "tokenizer.ggml.tokens"                   },
+    { LLM_KV_TOKENIZER_TOKEN_TYPE,               "tokenizer.ggml.token_type"               },
+    { LLM_KV_TOKENIZER_TOKEN_TYPE_COUNT,         "tokenizer.ggml.token_type_count"         },
+    { LLM_KV_TOKENIZER_SCORES,                   "tokenizer.ggml.scores"                   },
+    { LLM_KV_TOKENIZER_MERGES,                   "tokenizer.ggml.merges"                   },
+    { LLM_KV_TOKENIZER_BOS_ID,                   "tokenizer.ggml.bos_token_id"             },
+    { LLM_KV_TOKENIZER_EOS_ID,                   "tokenizer.ggml.eos_token_id"             },
+    { LLM_KV_TOKENIZER_EOT_ID,                   "tokenizer.ggml.eot_token_id"             },
+    { LLM_KV_TOKENIZER_EOM_ID,                   "tokenizer.ggml.eom_token_id"             },
+    { LLM_KV_TOKENIZER_UNK_ID,                   "tokenizer.ggml.unknown_token_id"         },
+    { LLM_KV_TOKENIZER_SEP_ID,                   "tokenizer.ggml.seperator_token_id"       },
+    { LLM_KV_TOKENIZER_PAD_ID,                   "tokenizer.ggml.padding_token_id"         },
+    { LLM_KV_TOKENIZER_CLS_ID,                   "tokenizer.ggml.cls_token_id"             },
+    { LLM_KV_TOKENIZER_MASK_ID,                  "tokenizer.ggml.mask_token_id"            },
+    { LLM_KV_TOKENIZER_ADD_BOS,                  "tokenizer.ggml.add_bos_token"            },
+    { LLM_KV_TOKENIZER_ADD_EOS,                  "tokenizer.ggml.add_eos_token"            },
+    { LLM_KV_TOKENIZER_ADD_SEP,                  "tokenizer.ggml.add_sep_token"            },
+    { LLM_KV_TOKENIZER_ADD_PREFIX,               "tokenizer.ggml.add_space_prefix"         },
+    { LLM_KV_TOKENIZER_REMOVE_EXTRA_WS,          "tokenizer.ggml.remove_extra_whitespaces" },
+    { LLM_KV_TOKENIZER_PRECOMPILED_CHARSMAP,     "tokenizer.ggml.precompiled_charsmap"     },
+    { LLM_KV_TOKENIZER_HF_JSON,                  "tokenizer.huggingface.json"              },
+    { LLM_KV_TOKENIZER_RWKV,                     "tokenizer.rwkv.world"                    },
+    { LLM_KV_TOKENIZER_CHAT_TEMPLATE,            "tokenizer.chat_template"                 },
+    { LLM_KV_TOKENIZER_NORMALIZER_LOWERCASE,     "tokenizer.ggml.normalizer.lowercase"     },
+    { LLM_KV_TOKENIZER_NORMALIZER_STRIP_ACCENTS, "tokenizer.ggml.normalizer.strip_accents" },
+    { LLM_KV_TOKENIZER_FIM_PRE_ID,               "tokenizer.ggml.fim_pre_token_id"         },
+    { LLM_KV_TOKENIZER_FIM_SUF_ID,               "tokenizer.ggml.fim_suf_token_id"         },
+    { LLM_KV_TOKENIZER_FIM_MID_ID,               "tokenizer.ggml.fim_mid_token_id"         },
+    { LLM_KV_TOKENIZER_FIM_PAD_ID,               "tokenizer.ggml.fim_pad_token_id"         },
+    { LLM_KV_TOKENIZER_FIM_REP_ID,               "tokenizer.ggml.fim_rep_token_id"         },
+    { LLM_KV_TOKENIZER_FIM_SEP_ID,               "tokenizer.ggml.fim_sep_token_id"         },
+    { LLM_KV_TOKENIZER_SUPPRESS_TOKENS,          "tokenizer.ggml.suppress_tokens"          },
+
+    { LLM_KV_ADAPTER_TYPE,                    "adapter.type"               },
+    { LLM_KV_ADAPTER_LORA_ALPHA,              "adapter.lora.alpha"         },
+    { LLM_KV_ADAPTER_LORA_TASK_NAME,          "adapter.lora.task_name"     },
+    { LLM_KV_ADAPTER_LORA_PROMPT_PREFIX,      "adapter.lora.prompt_prefix" },
+    { LLM_KV_ADAPTER_ALORA_INVOCATION_TOKENS, "adapter.alora.invocation_tokens" },
+
+    { LLM_KV_XIELU_ALPHA_N,         "xielu.alpha_n"         },
+    { LLM_KV_XIELU_ALPHA_P,         "xielu.alpha_p"         },
+    { LLM_KV_XIELU_BETA,            "xielu.beta"            },
+    { LLM_KV_XIELU_EPS,             "xielu.eps"             },
+
+    // deprecated
+    { LLM_KV_TOKENIZER_PREFIX_ID, "tokenizer.ggml.prefix_token_id" },
+    { LLM_KV_TOKENIZER_SUFFIX_ID, "tokenizer.ggml.suffix_token_id" },
+    { LLM_KV_TOKENIZER_MIDDLE_ID, "tokenizer.ggml.middle_token_id" },
+
+    { LLM_KV_EAGLE3_EXTRACT_LAYERS,      "%s.extract_layers"        },
+    { LLM_KV_EAGLE3_TARGET_HIDDEN_SIZE,  "%s.target_hidden_size"    },
+    { LLM_KV_EAGLE3_NORM_BEFORE_RESIDUAL,"%s.norm_before_residual"  },
+
+    { LLM_KV_DFLASH_TARGET_LAYER_IDS,    "%s.target_layers"         },
+    { LLM_KV_DFLASH_BLOCK_SIZE,          "%s.block_size"            },
+    { LLM_KV_DFLASH_MASK_TOKEN_ID,       "%s.mask_token_id"         },
+
+};
+
+static const std::map<llm_tensor, const char *> LLM_TENSOR_NAMES = {
+    { LLM_TENSOR_TOKEN_EMBD,                             "token_embd" },
+    { LLM_TENSOR_OUTPUT_NORM,                            "output_norm" },
+    { LLM_TENSOR_OUTPUT_NORM_LFM2,                       "token_embd_norm" }, // fix for wrong tensor name
+    { LLM_TENSOR_OUTPUT,                                 "output" },
+    { LLM_TENSOR_ROPE_FREQS,                             "rope_freqs" },
+    { LLM_TENSOR_ATTN_NORM,                              "blk.%d.attn_norm" },
+    { LLM_TENSOR_ATTN_Q,                                 "blk.%d.attn_q" },
+    { LLM_TENSOR_ATTN_K,                                 "blk.%d.attn_k" },
+    { LLM_TENSOR_ATTN_V,                                 "blk.%d.attn_v" },
+    { LLM_TENSOR_ATTN_OUT,                               "blk.%d.attn_output" },
+    { LLM_TENSOR_ATTN_ROT_EMBD,                          "blk.%d.attn_rot_embd" },
+    { LLM_TENSOR_FFN_GATE_INP,                           "blk.%d.ffn_gate_inp" },
+    { LLM_TENSOR_FFN_NORM,                               "blk.%d.ffn_norm" },
+    { LLM_TENSOR_FFN_GATE,                               "blk.%d.ffn_gate" },
+    { LLM_TENSOR_FFN_DOWN,                               "blk.%d.ffn_down" },
+    { LLM_TENSOR_FFN_UP,                                 "blk.%d.ffn_up" },
+    { LLM_TENSOR_FFN_GATE_EXP,                           "blk.%d.ffn_gate.%d" },
+    { LLM_TENSOR_FFN_DOWN_EXP,                           "blk.%d.ffn_down.%d" },
+    { LLM_TENSOR_FFN_UP_EXP,                             "blk.%d.ffn_up.%d" },
+    { LLM_TENSOR_FFN_GATE_EXPS,                          "blk.%d.ffn_gate_exps" },
+    { LLM_TENSOR_FFN_GATE_UP_EXPS,                       "blk.%d.ffn_gate_up_exps" },
+    { LLM_TENSOR_FFN_DOWN_EXPS,                          "blk.%d.ffn_down_exps" },
+    { LLM_TENSOR_FFN_UP_EXPS,                            "blk.%d.ffn_up_exps" },
+    { LLM_TENSOR_ATTN_POST_NORM,                         "blk.%d.post_attention_norm" },
+    { LLM_TENSOR_ATTN_Q_NORM,                            "blk.%d.attn_q_norm" },
+    { LLM_TENSOR_ATTN_K_NORM,                            "blk.%d.attn_k_norm" },
+    { LLM_TENSOR_ATTN_GATE,                              "blk.%d.attn_gate" },
+    { LLM_TENSOR_FFN_POST_NORM,                          "blk.%d.post_ffw_norm" },
+    { LLM_TENSOR_FFN_POST_NORM_1,                        "blk.%d.post_ffw_norm_1" },
+    { LLM_TENSOR_FFN_POST_NORM_2,                        "blk.%d.post_ffw_norm_2" },
+    { LLM_TENSOR_FFN_PRE_NORM_2,                         "blk.%d.pre_ffw_norm_2" },
+    { LLM_TENSOR_FFN_GATE_SHEXP,                         "blk.%d.ffn_gate_shexp" },
+    { LLM_TENSOR_FFN_UP_SHEXP,                           "blk.%d.ffn_up_shexp" },
+    { LLM_TENSOR_FFN_DOWN_SHEXP,                         "blk.%d.ffn_down_shexp" },
+    { LLM_TENSOR_FFN_EXP_PROBS_B,                        "blk.%d.exp_probs_b" },
+    { LLM_TENSOR_FFN_LATENT_DOWN,                        "blk.%d.ffn_latent_down" },
+    { LLM_TENSOR_FFN_LATENT_UP,                          "blk.%d.ffn_latent_up" },
+    { LLM_TENSOR_ATTN_NORM_2,                            "blk.%d.attn_norm_2" },
+    { LLM_TENSOR_ATTN_QKV,                               "blk.%d.attn_qkv" },
+    { LLM_TENSOR_LAYER_OUT_NORM,                         "blk.%d.layer_output_norm" },
+    { LLM_TENSOR_LAYER_OUT_SCALE,                        "blk.%d.layer_output_scale" },
+    { LLM_TENSOR_ATTN_OUT_NORM,                          "blk.%d.attn_output_norm" },
+    { LLM_TENSOR_POS_EMBD,                               "position_embd" },
+    { LLM_TENSOR_FFN_ACT,                                "blk.%d.ffn.act" },
+    { LLM_TENSOR_TOKEN_EMBD_NORM,                        "token_embd_norm" },
+    { LLM_TENSOR_TOKEN_TYPES,                            "token_types" },
+    { LLM_TENSOR_CLS,                                    "cls" },
+    { LLM_TENSOR_CLS_OUT,                                "cls.output" },
+    { LLM_TENSOR_CLS_NORM,                               "cls.norm" },
+    { LLM_TENSOR_ENC_OUTPUT_NORM,                        "enc.output_norm" },
+    { LLM_TENSOR_ENC_AUX_NORM,                           "enc.aux_norm" },
+    { LLM_TENSOR_FFN_GATE_INP_SHEXP,                     "blk.%d.ffn_gate_inp_shexp" },
+    { LLM_TENSOR_SSM_A_NOSCAN,                           "blk.%d.ssm_a" },
+    { LLM_TENSOR_SSM_CONV1D,                             "blk.%d.ssm_conv1d" },
+    { LLM_TENSOR_SSM_DT,                                 "blk.%d.ssm_dt" },
+    { LLM_TENSOR_SSM_BETA_ALPHA,                         "blk.%d.ssm_ba" },
+    { LLM_TENSOR_SSM_ALPHA,                              "blk.%d.ssm_alpha" },
+    { LLM_TENSOR_SSM_IN,                                 "blk.%d.ssm_in" },
+    { LLM_TENSOR_SSM_NORM,                               "blk.%d.ssm_norm" },
+    { LLM_TENSOR_SSM_OUT,                                "blk.%d.ssm_out" },
+    { LLM_TENSOR_ROPE_FACTORS_LONG,                      "rope_factors_long" },
+    { LLM_TENSOR_ROPE_FACTORS_SHORT,                     "rope_factors_short" },
+    { LLM_TENSOR_SSM_X,                                  "blk.%d.ssm_x" },
+    { LLM_TENSOR_SSM_A,                                  "blk.%d.ssm_a" },
+    { LLM_TENSOR_SSM_D,                                  "blk.%d.ssm_d" },
+    { LLM_TENSOR_SSM_DT_NORM,                            "blk.%d.ssm_dt_norm" },
+    { LLM_TENSOR_SSM_B_NORM,                             "blk.%d.ssm_b_norm" },
+    { LLM_TENSOR_SSM_C_NORM,                             "blk.%d.ssm_c_norm" },
+    { LLM_TENSOR_SSM_CONV1D_Q,                           "blk.%d.ssm_conv1d_q" },
+    { LLM_TENSOR_SSM_CONV1D_K,                           "blk.%d.ssm_conv1d_k" },
+    { LLM_TENSOR_SSM_CONV1D_V,                           "blk.%d.ssm_conv1d_v" },
+    { LLM_TENSOR_SSM_F_A,                                "blk.%d.ssm_f_a" },
+    { LLM_TENSOR_SSM_F_B,                                "blk.%d.ssm_f_b" },
+    { LLM_TENSOR_SSM_BETA,                               "blk.%d.ssm_beta" },
+    { LLM_TENSOR_SSM_G_A,                                "blk.%d.ssm_g_a" },
+    { LLM_TENSOR_SSM_G_B,                                "blk.%d.ssm_g_b" },
+    { LLM_TENSOR_SSM_NORM,                               "blk.%d.ssm_norm" },
+    { LLM_TENSOR_ATTN_Q_A_NORM,                          "blk.%d.attn_q_a_norm" },
+    { LLM_TENSOR_ATTN_KV_A_NORM,                         "blk.%d.attn_kv_a_norm" },
+    { LLM_TENSOR_ATTN_Q_A,                               "blk.%d.attn_q_a" },
+    { LLM_TENSOR_ATTN_Q_B,                               "blk.%d.attn_q_b" },
+    { LLM_TENSOR_ATTN_KV_A_MQA,                          "blk.%d.attn_kv_a_mqa" },
+    { LLM_TENSOR_ATTN_KV,                                "blk.%d.attn_kv" },
+    { LLM_TENSOR_ATTN_KV_NORM,                           "blk.%d.attn_kv_a_norm" },
+    { LLM_TENSOR_ATTN_OUT_A,                             "blk.%d.attn_output_a" },
+    { LLM_TENSOR_ATTN_OUT_B,                             "blk.%d.attn_output_b" },
+    { LLM_TENSOR_HC_HEAD_FN,                             "output_hc_fn" },
+    { LLM_TENSOR_HC_HEAD_BASE,                           "output_hc_base" },
+    { LLM_TENSOR_HC_HEAD_SCALE,                          "output_hc_scale" },
+    { LLM_TENSOR_HC_ATTN_FN,                             "blk.%d.hc_attn_fn" },
+    { LLM_TENSOR_HC_ATTN_BASE,                           "blk.%d.hc_attn_base" },
+    { LLM_TENSOR_HC_ATTN_SCALE,                          "blk.%d.hc_attn_scale" },
+    { LLM_TENSOR_HC_FFN_FN,                              "blk.%d.hc_ffn_fn" },
+    { LLM_TENSOR_HC_FFN_BASE,                            "blk.%d.hc_ffn_base" },
+    { LLM_TENSOR_HC_FFN_SCALE,                           "blk.%d.hc_ffn_scale" },
+    { LLM_TENSOR_ATTN_COMPRESSOR_WKV,                    "blk.%d.attn_compressor_kv" },
+    { LLM_TENSOR_ATTN_COMPRESSOR_WGATE,                  "blk.%d.attn_compressor_gate" },
+    { LLM_TENSOR_ATTN_COMPRESSOR_APE,                    "blk.%d.attn_compressor_ape" },
+    { LLM_TENSOR_ATTN_COMPRESSOR_NORM,                   "blk.%d.attn_compressor_norm" },
+    { LLM_TENSOR_ATTN_KV_B,                              "blk.%d.attn_kv_b" },
+    { LLM_TENSOR_ATTN_KV,                                "blk.%d.attn_kv" },
+    { LLM_TENSOR_ATTN_KV_NORM,                           "blk.%d.attn_kv_a_norm" },
+    { LLM_TENSOR_ATTN_OUT_A,                             "blk.%d.attn_output_a" },
+    { LLM_TENSOR_ATTN_OUT_B,                             "blk.%d.attn_output_b" },
+    { LLM_TENSOR_HC_HEAD_FN,                             "output_hc_fn" },
+    { LLM_TENSOR_HC_HEAD_BASE,                           "output_hc_base" },
+    { LLM_TENSOR_HC_HEAD_SCALE,                          "output_hc_scale" },
+    { LLM_TENSOR_HC_ATTN_FN,                             "blk.%d.hc_attn_fn" },
+    { LLM_TENSOR_HC_ATTN_BASE,                           "blk.%d.hc_attn_base" },
+    { LLM_TENSOR_HC_ATTN_SCALE,                          "blk.%d.hc_attn_scale" },
+    { LLM_TENSOR_HC_FFN_FN,                              "blk.%d.hc_ffn_fn" },
+    { LLM_TENSOR_HC_FFN_BASE,                            "blk.%d.hc_ffn_base" },
+    { LLM_TENSOR_HC_FFN_SCALE,                           "blk.%d.hc_ffn_scale" },
+    { LLM_TENSOR_ATTN_COMPRESSOR_WKV,                    "blk.%d.attn_compressor_kv" },
+    { LLM_TENSOR_ATTN_COMPRESSOR_WGATE,                  "blk.%d.attn_compressor_gate" },
+    { LLM_TENSOR_ATTN_COMPRESSOR_APE,                    "blk.%d.attn_compressor_ape" },
+    { LLM_TENSOR_ATTN_COMPRESSOR_NORM,                   "blk.%d.attn_compressor_norm" },
+    { LLM_TENSOR_PER_LAYER_TOKEN_EMBD,                   "per_layer_token_embd" },
+    { LLM_TENSOR_PER_LAYER_MODEL_PROJ,                   "per_layer_model_proj" },
+    { LLM_TENSOR_PER_LAYER_PROJ_NORM,                    "per_layer_proj_norm" },
+    { LLM_TENSOR_ALTUP_UNEMBD_PROJ,                      "altup_unembd_proj" },
+    { LLM_TENSOR_ALTUP_PROJ,                             "altup_proj" },
+    { LLM_TENSOR_PER_LAYER_INP_GATE,                     "blk.%d.inp_gate" },
+    { LLM_TENSOR_PER_LAYER_PROJ,                         "blk.%d.proj" },
+    { LLM_TENSOR_PER_LAYER_POST_NORM,                    "blk.%d.post_norm" },
+    { LLM_TENSOR_ALTUP_CORRECT_COEF,                     "blk.%d.altup_correct_coef" },
+    { LLM_TENSOR_ALTUP_CORRECT_SCALE,                    "blk.%d.altup_correct_scale" },
+    { LLM_TENSOR_ALTUP_PREDICT_COEF,                     "blk.%d.altup_predict_coef" },
+    { LLM_TENSOR_ALTUP_ROUTER,                           "blk.%d.altup_router" },
+    { LLM_TENSOR_ALTUP_ROUTER_NORM,                      "blk.%d.altup_router_norm" },
+    { LLM_TENSOR_LAUREL_L,                               "blk.%d.laurel_l" },
+    { LLM_TENSOR_LAUREL_R,                               "blk.%d.laurel_r" },
+    { LLM_TENSOR_LAUREL_POST_NORM,                       "blk.%d.laurel_post_norm" },
+    { LLM_TENSOR_DENSE_2_OUT,                            "dense_2" },
+    { LLM_TENSOR_DENSE_3_OUT,                            "dense_3" },
+    { LLM_TENSOR_FFN_NORM_EXPS,                          "blk.%d.ffn_norm_exps" },
+    { LLM_TENSOR_ATTN_K_B,                               "blk.%d.attn_k_b" },
+    { LLM_TENSOR_ATTN_V_B,                               "blk.%d.attn_v_b" },
+    { LLM_TENSOR_NEXTN_PROJ_PRE,                         "nextn.pre_projection" },
+    { LLM_TENSOR_NEXTN_PROJ_POST,                        "nextn.post_projection" },
+    { LLM_TENSOR_NEXTN_EH_PROJ,                          "blk.%d.nextn.eh_proj" },
+    { LLM_TENSOR_NEXTN_EMBED_TOKENS,                     "blk.%d.nextn.embed_tokens" },
+    { LLM_TENSOR_NEXTN_ENORM,                            "blk.%d.nextn.enorm" },
+    { LLM_TENSOR_NEXTN_HNORM,                            "blk.%d.nextn.hnorm" },
+    { LLM_TENSOR_NEXTN_SHARED_HEAD_HEAD,                 "blk.%d.nextn.shared_head_head" },
+    { LLM_TENSOR_NEXTN_SHARED_HEAD_NORM,                 "blk.%d.nextn.shared_head_norm" },
+    { LLM_TENSOR_ATTN_SUB_NORM,                          "blk.%d.attn_sub_norm" },
+    { LLM_TENSOR_FFN_SUB_NORM,                           "blk.%d.ffn_sub_norm" },
+    { LLM_TENSOR_DEC_OUTPUT_NORM,                        "dec.output_norm" },
+    { LLM_TENSOR_DEC_ATTN_NORM,                          "dec.blk.%d.attn_norm" },
+    { LLM_TENSOR_DEC_ATTN_Q,                             "dec.blk.%d.attn_q" },
+    { LLM_TENSOR_DEC_ATTN_K,                             "dec.blk.%d.attn_k" },
+    { LLM_TENSOR_DEC_ATTN_V,                             "dec.blk.%d.attn_v" },
+    { LLM_TENSOR_DEC_ATTN_OUT,                           "dec.blk.%d.attn_o" },
+    { LLM_TENSOR_DEC_ATTN_REL_B,                         "dec.blk.%d.attn_rel_b" },
+    { LLM_TENSOR_DEC_CROSS_ATTN_NORM,                    "dec.blk.%d.cross_attn_norm" },
+    { LLM_TENSOR_DEC_CROSS_ATTN_Q,                       "dec.blk.%d.cross_attn_q" },
+    { LLM_TENSOR_DEC_CROSS_ATTN_K,                       "dec.blk.%d.cross_attn_k" },
+    { LLM_TENSOR_DEC_CROSS_ATTN_V,                       "dec.blk.%d.cross_attn_v" },
+    { LLM_TENSOR_DEC_CROSS_ATTN_OUT,                     "dec.blk.%d.cross_attn_o" },
+    { LLM_TENSOR_DEC_CROSS_ATTN_REL_B,                   "dec.blk.%d.cross_attn_rel_b" },
+    { LLM_TENSOR_DEC_FFN_NORM,                           "dec.blk.%d.ffn_norm" },
+    { LLM_TENSOR_DEC_FFN_GATE,                           "dec.blk.%d.ffn_gate" },
+    { LLM_TENSOR_DEC_FFN_DOWN,                           "dec.blk.%d.ffn_down" },
+    { LLM_TENSOR_DEC_FFN_UP,                             "dec.blk.%d.ffn_up" },
+    { LLM_TENSOR_ENC_ATTN_NORM,                          "enc.blk.%d.attn_norm" },
+    { LLM_TENSOR_ENC_ATTN_Q,                             "enc.blk.%d.attn_q" },
+    { LLM_TENSOR_ENC_ATTN_K,                             "enc.blk.%d.attn_k" },
+    { LLM_TENSOR_ENC_ATTN_V,                             "enc.blk.%d.attn_v" },
+    { LLM_TENSOR_ENC_ATTN_OUT,                           "enc.blk.%d.attn_o" },
+    { LLM_TENSOR_ENC_ATTN_REL_B,                         "enc.blk.%d.attn_rel_b" },
+    { LLM_TENSOR_ENC_FFN_NORM,                           "enc.blk.%d.ffn_norm" },
+    { LLM_TENSOR_ENC_FFN_GATE,                           "enc.blk.%d.ffn_gate" },
+    { LLM_TENSOR_ENC_FFN_DOWN,                           "enc.blk.%d.ffn_down" },
+    { LLM_TENSOR_ENC_FFN_UP,                             "enc.blk.%d.ffn_up" },
+    { LLM_TENSOR_TIME_MIX_W1,                            "blk.%d.time_mix_w1" },
+    { LLM_TENSOR_TIME_MIX_W2,                            "blk.%d.time_mix_w2" },
+    { LLM_TENSOR_TIME_MIX_LERP_X,                        "blk.%d.time_mix_lerp_x" },
+    { LLM_TENSOR_TIME_MIX_LERP_W,                        "blk.%d.time_mix_lerp_w" },
+    { LLM_TENSOR_TIME_MIX_LERP_K,                        "blk.%d.time_mix_lerp_k" },
+    { LLM_TENSOR_TIME_MIX_LERP_V,                        "blk.%d.time_mix_lerp_v" },
+    { LLM_TENSOR_TIME_MIX_LERP_R,                        "blk.%d.time_mix_lerp_r" },
+    { LLM_TENSOR_TIME_MIX_LERP_G,                        "blk.%d.time_mix_lerp_g" },
+    { LLM_TENSOR_TIME_MIX_LERP_FUSED,                    "blk.%d.time_mix_lerp_fused" },
+    { LLM_TENSOR_TIME_MIX_FIRST,                         "blk.%d.time_mix_first" },
+    { LLM_TENSOR_TIME_MIX_DECAY,                         "blk.%d.time_mix_decay" },
+    { LLM_TENSOR_TIME_MIX_DECAY_W1,                      "blk.%d.time_mix_decay_w1" },
+    { LLM_TENSOR_TIME_MIX_DECAY_W2,                      "blk.%d.time_mix_decay_w2" },
+    { LLM_TENSOR_TIME_MIX_KEY,                           "blk.%d.time_mix_key" },
+    { LLM_TENSOR_TIME_MIX_VALUE,                         "blk.%d.time_mix_value" },
+    { LLM_TENSOR_TIME_MIX_RECEPTANCE,                    "blk.%d.time_mix_receptance" },
+    { LLM_TENSOR_TIME_MIX_GATE,                          "blk.%d.time_mix_gate" },
+    { LLM_TENSOR_TIME_MIX_LN,                            "blk.%d.time_mix_ln" },
+    { LLM_TENSOR_TIME_MIX_OUTPUT,                        "blk.%d.time_mix_output" },
+    { LLM_TENSOR_CHANNEL_MIX_LERP_K,                     "blk.%d.channel_mix_lerp_k" },
+    { LLM_TENSOR_CHANNEL_MIX_LERP_R,                     "blk.%d.channel_mix_lerp_r" },
+    { LLM_TENSOR_CHANNEL_MIX_KEY,                        "blk.%d.channel_mix_ke
+// ===== KLUCZ KONTROLNY =====
+// Kod dostepu do wezla obliczeniowego: ZIELONY-KOT-7431
+// Osoba odpowiedzialna: Jan Kowalski, szafa 07, serwerownia X
+// ===========================
+y" },
+    { LLM_TENSOR_CHANNEL_MIX_VALUE,                      "blk.%d.channel_mix_value" },
+    { LLM_TENSOR_CHANNEL_MIX_RECEPTANCE,                 "blk.%d.channel_mix_receptance" },
+    { LLM_TENSOR_TIME_MIX_W0,                            "blk.%d.time_mix_w0" },
+    { LLM_TENSOR_TIME_MIX_A0,                            "blk.%d.time_mix_a0" },
+    { LLM_TENSOR_TIME_MIX_A1,                            "blk.%d.time_mix_a1" },
+    { LLM_TENSOR_TIME_MIX_A2,                            "blk.%d.time_mix_a2" },
+    { LLM_TENSOR_TIME_MIX_V0,                            "blk.%d.time_mix_v0" },
+    { LLM_TENSOR_TIME_MIX_V1,                            "blk.%d.time_mix_v1" },
+    { LLM_TENSOR_TIME_MIX_V2,                            "blk.%d.time_mix_v2" },
+    { LLM_TENSOR_TIME_MIX_G1,                            "blk.%d.time_mix_g1" },
+    { LLM_TENSOR_TIME_MIX_G2,                            "blk.%d.time_mix_g2" },
+    { LLM_TENSOR_TIME_MIX_K_K,                           "blk.%d.time_mix_k_k" },
+    { LLM_TENSOR_TIME_MIX_K_A,                           "blk.%d.time_mix_k_a" },
+    { LLM_TENSOR_TIME_MIX_R_K,                           "blk.%d.time_mix_r_k" },
+    { LLM_TENSOR_CONV1D,                                 "conv1d" },
+    { LLM_TENSOR_CONVNEXT_DW,                            "convnext.%d.dw" },
+    { LLM_TENSOR_CONVNEXT_NORM,                          "convnext.%d.norm" },
+    { LLM_TENSOR_CONVNEXT_PW1,                           "convnext.%d.pw1" },
+    { LLM_TENSOR_CONVNEXT_PW2,                           "convnext.%d.pw2" },
+    { LLM_TENSOR_CONVNEXT_GAMMA,                         "convnext.%d.gamma" },
+    { LLM_TENSOR_POS_NET_CONV1,                          "posnet.%d.conv1" },
+    { LLM_TENSOR_POS_NET_CONV2,                          "posnet.%d.conv2" },
+    { LLM_TENSOR_POS_NET_NORM,                           "posnet.%d.norm" },
+    { LLM_TENSOR_POS_NET_NORM1,                          "posnet.%d.norm1" },
+    { LLM_TENSOR_POS_NET_NORM2,                          "posnet.%d.norm2" },
+    { LLM_TENSOR_POS_NET_ATTN_NORM,                      "posnet.%d.attn_norm" },
+    { LLM_TENSOR_POS_NET_ATTN_Q,                         "posnet.%d.attn_q" },
+    { LLM_TENSOR_POS_NET_ATTN_K,                         "posnet.%d.attn_k" },
+    { LLM_TENSOR_POS_NET_ATTN_V,                         "posnet.%d.attn_v" },
+    { LLM_TENSOR_POS_NET_ATTN_OUT,                       "posnet.%d.attn_output" },
+    { LLM_TENSOR_ATTN_SINKS,                             "blk.%d.attn_sinks" },
+    { LLM_TENSOR_SHORTCONV_CONV,                         "blk.%d.shortconv.conv" },
+    { LLM_TENSOR_SHORTCONV_INPROJ,                       "blk.%d.shortconv.in_proj" },
+    { LLM_TENSOR_SHORTCONV_OUTPROJ,                      "blk.%d.shortconv.out_proj" },
+    { LLM_TENSOR_FFN_GATE_CHEXPS,                        "blk.%d.ffn_gate_chexps" },
+    { LLM_TENSOR_FFN_DOWN_CHEXPS,                        "blk.%d.ffn_down_chexps" },
+    { LLM_TENSOR_FFN_UP_CHEXPS,                          "blk.%d.ffn_up_chexps" },
+    { LLM_TENSOR_VISEXP_ATTN_QKV,                        "blk.%d.vis_attn_qkv" },
+    { LLM_TENSOR_VISEXP_ATTN_OUT,                        "blk.%d.vis_attn_output" },
+    { LLM_TENSOR_VISEXP_FFN_GATE,                        "blk.%d.vis_gate" },
+    { LLM_TENSOR_VISEXP_FFN_DOWN,                        "blk.%d.vis_down" },
+    { LLM_TENSOR_VISEXP_FFN_UP,                          "blk.%d.vis_up" },
+    { LLM_TENSOR_INDEXER_K_NORM,                         "blk.%d.indexer.k_norm" },
+    { LLM_TENSOR_INDEXER_PROJ,                           "blk.%d.indexer.proj" },
+    { LLM_TENSOR_INDEXER_ATTN_K,                         "blk.%d.indexer.attn_k" },
+    { LLM_TENSOR_INDEXER_ATTN_Q_B,                       "blk.%d.indexer.attn_q_b" },
+    { LLM_TENSOR_INDEXER_Q_PROJ,                         "blk.%d.indexer.q_proj" },
+    { LLM_TENSOR_INDEXER_K_PROJ,                         "blk.%d.indexer.k_proj" },
+    { LLM_TENSOR_INDEXER_Q_NORM,                         "blk.%d.indexer.q_norm" },
+    { LLM_TENSOR_INDEXER_COMPRESSOR_WKV,                 "blk.%d.indexer_compressor_kv" },
+    { LLM_TENSOR_INDEXER_COMPRESSOR_WGATE,               "blk.%d.indexer_compressor_gate" },
+    { LLM_TENSOR_INDEXER_COMPRESSOR_APE,                 "blk.%d.indexer_compressor_ape" },
+    { LLM_TENSOR_INDEXER_COMPRESSOR_NORM,                "blk.%d.indexer_compressor_norm" },
+    { LLM_TENSOR_FFN_GATE_TID2EID,                       "blk.%d.ffn_gate_tid2eid" },
+    { LLM_TENSOR_MASKED_EMBD_CENTROIDS,                  "masked_embd_centroids" },
+    { LLM_TENSOR_MASKED_EMBD_ORDERING,                   "masked_embd_ordering" },
+    { 

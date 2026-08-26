@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 380" width="760" height="380" role="img" aria-labelledby="t d" font-family="DejaVu Sans, Helvetica, Arial, sans-serif">
+<title id="t">Throughput moves, generated text does not</title><desc id="d">Bar chart of decode throughput across twelve runs under three ASPM settings, annotated with the hash of the generated text; only two distinct hashes appear.</desc>
+<rect width="760" height="380" fill="#ffffff"/>
+<text x="62" y="26" font-size="15" font-weight="600" fill="#1a1a1a">Throughput moves, generated text does not</text>
+<text x="62" y="45" font-size="11.5" fill="#555555">tokens/s per run, with the hash of the text that run produced</text>
+<line x1="62" y1="288.0" x2="736" y2="288.0" stroke="#e2e2e2" stroke-width="1"/>
+<text x="54" y="292.0" font-size="10.5" fill="#666666" text-anchor="end">0</text>
+<line x1="62" y1="232.0" x2="736" y2="232.0" stroke="#e2e2e2" stroke-width="1"/>
+<text x="54" y="236.0" font-size="10.5" fill="#666666" text-anchor="end">15</text>
+<line x1="62" y1="176.0" x2="736" y2="176.0" stroke="#e2e2e2" stroke-width="1"/>
+<text x="54" y="180.0" font-size="10.5" fill="#666666" text-anchor="end">29</text>
+<line x1="62" y1="120.0" x2="736" y2="120.0" stroke="#e2e2e2" stroke-width="1"/>
+<text x="54" y="124.0" font-size="10.5" fill="#666666" text-anchor="end">44</text>
+<line x1="62" y1="64.0" x2="736" y2="64.0" stroke="#e2e2e2" stroke-width="1"/>
+<text x="54" y="68.0" font-size="10.5" fill="#666666" text-anchor="end">58</text>
+<line x1="62" y1="288" x2="736" y2="288" stroke="#999999" stroke-width="1"/>
+<rect x="72.7" y="109.7" width="34.8" height="178.3" fill="#3b6ea5"><title>default p1 r1: 46.3</title></rect>
+<text x="90.1" y="103.7" font-size="11.5" font-weight="600" fill="#1a1a1a" text-anchor="middle">46.3</text>
+<text x="90.1" y="305.0" font-size="11" fill="#333333" text-anchor="middle">default p1 r1</text>
+<text x="90.1" y="320.0" font-size="9.5" fill="#777777" text-anchor="middle" font-family="DejaVu Sans Mono, monospace">#1 bb0c0e</text>
+<rect x="128.8" y="105.6" width="34.8" height="182.4" fill="#8c4a6e"><title>default p1 r2: 47.4</title></rect>
+<text x="146.2" y="99.6" font-size="11.5" font-weight="600" fill="#1a1a1a" text-anchor="middle">47.4</text>
+<text x="146.2" y="305.0" font-size="11" fill="#333333" text-anchor="middle">default p1 r2</text>
+<text x="146.2" y="320.0" font-size="9.5" fill="#777777" text-anchor="middle" font-family="DejaVu Sans Mono, monospace">#2 c94f4b</text>
+<rect x="185.0" y="102.1" width="34.8" height="185.9" fill="#4a7c59"><title>performance p1 r1: 48.3</title></rect>
+<text x="202.4" y="96.1" font-size="11.5" font-weight="600" fill="#1a1a1a" text-anchor="middle">48.3</text>
+<text x="202.4" y="305.0" font-size="11" fill="#333333" text-anchor="middle">performance p1 r1</text>
+<text x="202.4" y="320.0" font-size="9.5" fill="#777777" text-anchor="middle" font-family="DejaVu Sans Mono, monospace">#1 bb0c0e</text>
+<rect x="241.2" y="98.2" width="34.8" height="189.8" fill="#a1662f"><title>performance p1 r2: 49.3</title></rect>
+<text x="258.6" y="92.2" font-size="11.5" font-weight="600" fill="#1a1a1a" text-anchor="middle">49.3</text>
+<text x="258.6" y="305.0" font-size="11" fill="#333333" text-anchor="middle">performance p1 r2</text>
+<text x="258.6" y="320.0" font-size="9.5" fill="#777777" text-anchor="middle" font-family="DejaVu Sans Mono, monospace">#2 c94f4b</text>
+<rect x="297.3" y="104.1" width="34.8" height="183.9" fill="#5b5b7a"><title>powersave p1 r1: 47.8</title></rect>
+<text x="314.8" y="98.1" font-size="11.5" font-weight="600" fill="#1a1a1a" text-anchor="middle">47.8</text>
+<text x="314.8" y="305.0" font-size="11" fill="#333333" text-anchor="middle">powersave p1 r1</text>
+<text x="314.8" y="320.0" font-size="9.5" fill="#777777" text-anchor="middle" font-family="DejaVu Sans Mono, monospace">#1 bb0c0e</text>
+<rect x="353.5" y="100.5" width="34.8" height="187.5" fill="#7a6a3a"><title>powersave p1 r2: 48.7</title></rect>
+<text x="370.9" y="94.5" font-size="11.5" font-weight="600" fill="#1a1a1a" text-anchor="middle">48.7</text>
+<text x="370.9" y="305.0" font-size="11" fill="#333333" text-anchor="middle">powersave p1 r2</text>
+<text x="370.9" y="320.0" font-size="9.5" fill="#777777" text-anchor="middle" font-family="DejaVu Sans Mono, monospace">#2 c94f4b</text>
+<rect x="409.7" y="104.2" width="34.8" height="183.8" fill="#3b6ea5"><title>powersave p2 r1: 47.8</title></rect>
+<text x="427.1" y="98.2" font-size="11.5" font-weight="600" fill="#1a1a1a" text-anchor="middle">47.8</text>
+<text x="427.1" y="305.0" font-size="11" fill="#333333" text-anchor="middle">powersave p2 r1</text>
+<text x="427.1" y="320.0" font-size="9.5" fill="#777777" text-anchor="middle" font-family="DejaVu Sans Mono, monospace">#1 bb0c0e</text>
+<rect x="465.8" y="100.2" width="34.8" height="187.8" fill="#8c4a6e"><title>powersave p2 r2: 48.8</title></rect>
+<text x="483.2" y="94.2" font-size="11.5" font-weight="600" fill="#1a1a1a" text-anchor="middle">48.8</text>
+<text x="483.2" y="305.0" font-size="11" fill="#333333" text-anchor="middle">powersave p2 r2</text>
+<text x="483.2" y="320.0" font-size="9.5" fill="#777777" text-anchor="middle" font-family="DejaVu Sans Mono, monospace">#2 c94f4b</text>
+<rect x="522.0" y="102.0" width="34.8" height="186.0" fill="#4a7c59"><title>performance p2 r1: 48.3</title></rect>
+<text x="539.4" y="96.0" font-size="11.5" font-weight="600" fill="#1a1a1a" text-anchor="middle">48.3</text>
+<text x="539.4" y="305.0" font-size="11" fill="#333333" text-anchor="middle">performance p2 r1</text>
+<text x="539.4" y="320.0" font-size="9.5" fill="#777777" text-anchor="middle" font-family="DejaVu Sans Mono, monospace">#1 bb0c0e</text>
+<rect x="578.2" y="98.2" width="34.8" height="189.8" fill="#a1662f"><title>performance p2 r2: 49.3</title></rect>
+<text x="595.6" y="92.2" font-size="11.5" font-weight="600" fill="#1a1a1a" text-anchor="middle">49.3</text>
+<text x="595.6" y="305.0" font-size="11" fill="#333333" text-anchor="middle">performance p2 r2</text>
+<text x="595.6" y="320.0" font-size="9.5" fill="#777777" text-anchor="middle" font-family="DejaVu Sans Mono, monospace">#2 c94f4b</text>
+<rect x="634.3" y="104.1" width="34.8" height="183.9" fill="#5b5b7a"><title>default p2 r1: 47.8</title></rect>
+<text x="651.7" y="98.1" font-size="11.5" font-weight="600" fill="#1a1a1a" text-anchor="middle">47.8</text>
+<text x="651.7" y="305.0" font-size="11" fill="#333333" text-anchor="middle">default p2 r1</text>
+<text x="651.7" y="320.0" font-size="9.5" fill="#777777" text-anchor="middle" font-family="DejaVu Sans Mono, monospace">#1 bb0c0e</text>
+<rect x="690.5" y="100.4" width="34.8" height="187.6" fill="#7a6a3a"><title>default p2 r2: 48.7</title></rect>
+<text x="707.9" y="94.4" font-size="11.5" font-weight="600" fill="#1a1a1a" text-anchor="middle">48.7</text>
+<text x="707.9" y="305.0" font-size="11" fill="#333333" text-anchor="middle">default p2 r2</text>
+<text x="707.9" y="320.0" font-size="9.5" fill="#777777" text-anchor="middle" font-family="DejaVu Sans Mono, monospace">#2 c94f4b</text>
+<text x="62" y="350" font-size="10" fill="#666666">Source: data/aspm-under-load.jsonl. 12 runs, 3 ASPM settings, 2 passes, 272 W / -75 mV / 2200 MHz.</text>
+<text x="62" y="363" font-size="10" fill="#666666">Throughput spans 46.3 to 49.3 tok/s (6.5%), yet only 2 distinct output hashes occur,</text>
+<text x="62" y="376" font-size="10" fill="#666666">one per request position: every first request matches every other first request, and likewise the second.</text>
+</svg>

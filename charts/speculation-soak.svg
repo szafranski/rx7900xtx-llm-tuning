@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 380" width="760" height="380" role="img" aria-labelledby="t d" font-family="DejaVu Sans, Helvetica, Arial, sans-serif">
+<title id="t">Speculative decoding during the 30-minute soak</title><desc id="d">Bar chart comparing mean decode throughput with and without speculation over repeated requests in a sustained run.</desc>
+<rect width="760" height="380" fill="#ffffff"/>
+<text x="62" y="26" font-size="15" font-weight="600" fill="#1a1a1a">Speculative decoding during the 30-minute soak</text>
+<text x="62" y="45" font-size="11.5" fill="#555555">mean tokens/s over the soak, with sample count and observed range</text>
+<line x1="62" y1="288.0" x2="736" y2="288.0" stroke="#e2e2e2" stroke-width="1"/>
+<text x="54" y="292.0" font-size="10.5" fill="#666666" text-anchor="end">0</text>
+<line x1="62" y1="232.0" x2="736" y2="232.0" stroke="#e2e2e2" stroke-width="1"/>
+<text x="54" y="236.0" font-size="10.5" fill="#666666" text-anchor="end">14</text>
+<line x1="62" y1="176.0" x2="736" y2="176.0" stroke="#e2e2e2" stroke-width="1"/>
+<text x="54" y="180.0" font-size="10.5" fill="#666666" text-anchor="end">28</text>
+<line x1="62" y1="120.0" x2="736" y2="120.0" stroke="#e2e2e2" stroke-width="1"/>
+<text x="54" y="124.0" font-size="10.5" fill="#666666" text-anchor="end">42</text>
+<line x1="62" y1="64.0" x2="736" y2="64.0" stroke="#e2e2e2" stroke-width="1"/>
+<text x="54" y="68.0" font-size="10.5" fill="#666666" text-anchor="end">56</text>
+<line x1="62" y1="288" x2="736" y2="288" stroke="#999999" stroke-width="1"/>
+<rect x="188.5" y="193.0" width="84.0" height="95.0" fill="#3b6ea5"><title>no speculation: 23.8</title></rect>
+<text x="230.5" y="187.0" font-size="11.5" font-weight="600" fill="#1a1a1a" text-anchor="middle">23.8</text>
+<text x="230.5" y="305.0" font-size="11" fill="#333333" text-anchor="middle">no speculation</text>
+<text x="230.5" y="320.0" font-size="9.5" fill="#777777" text-anchor="middle" font-family="DejaVu Sans Mono, monospace">n=6, 23.8-23.8</text>
+<rect x="525.5" y="98.2" width="84.0" height="189.8" fill="#8c4a6e"><title>mtp+ngram-map-k: 47.6</title></rect>
+<text x="567.5" y="92.2" font-size="11.5" font-weight="600" fill="#1a1a1a" text-anchor="middle">47.6</text>
+<text x="567.5" y="305.0" font-size="11" fill="#333333" text-anchor="middle">mtp+ngram-map-k</text>
+<text x="567.5" y="320.0" font-size="9.5" fill="#777777" text-anchor="middle" font-family="DejaVu Sans Mono, monospace">n=11, 46.6-48.6</text>
+<text x="62" y="350" font-size="10" fill="#666666">Source: data/soak-efficient-*-runs.jsonl. Same prompt, 1200 tokens per request,</text>
+<text x="62" y="363" font-size="10" fill="#666666">272 W / -75 mV / 2200 MHz, 128K context, q8_0 + turbo4 KV cache.</text>
+<text x="62" y="376" font-size="10" fill="#666666">Ratio: 2.00x. This is a dense 27B model, so every token</text>
+<text x="62" y="389" font-size="10" fill="#666666">reads all 17.5 GB of weights; speculation buys parallel commits, not a faster pass.</text>
+</svg>

@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# Validate the committed data, manifest and charts. Run before committing.
+set -uo pipefail
+cd "$(dirname "$0")/.."
+fail=0
+note() { printf '%-28s %s\n' "$1" "$2"; }
+
+# 1. every .jsonl parses
+bad=$(python3 - <<'PY'
+import json, pathlib, sys
+bad = []
+for p in sorted(pathlib.Path("data").glob("*.jsonl")):
+    for i, line in enumerate(p.open(encoding="utf-8", errors="replace"), 1):
+        if not line.strip().startswith("{"):
+            continue
+        try:
+            json.loads(line)
+        except json.JSONDecodeError as e:
+            bad.append(f"{p}:{i}: {e}")
+for p in sorted(pathlib.Path("data").glob("*.json")):
+    try:
+        json.loads(p.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        bad.append(f"{p}: {e}")
+print("\n".join(bad))
+PY
+)
+if [ -n "$bad" ]; then echo "$bad"; note "json" "FAIL"; fail=1; else note "json" "ok"; fi
+
+# 2. scripts parse
+for f in scripts/*.sh; do bash -n "$f" || { note "syntax $f" "FAIL"; fail=1; }; done
+for f in scripts/*.py charts/*.py; do
+  python3 -m py_compile "$f" 2>/dev/null || { note "syntax $f" "FAIL"; fail=1; }
+done
+rm -rf scripts/__pycache__ charts/__pycache__
+note "script syntax" "ok"
+
+# 3. manifest and charts are regenerable and unchanged
+before=$(cat data/manifest.csv charts/*.svg | sha256sum)
+python3 scripts/build_manifest.py >/dev/null || { note "manifest" "FAIL"; fail=1; }
+python3 charts/make_charts.py >/dev/null || { note "charts" "FAIL"; fail=1; }
+after=$(cat data/manifest.csv charts/*.svg | sha256sum)
+if [ "$before" = "$after" ]; then
+  note "manifest+charts" "ok, up to date"
+else
+  note "manifest+charts" "REGENERATED - commit the change"
+  fail=1
+fi
+
+# 4. nothing host-specific slipped in
+pat='pfabi|/var/home/|atomic-pc|agentsjump|claudejump|llamaproxy|gpuremote|lumo-pve|\.lan\b'
+pat="$pat"'|\b(10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\.[0-9]{1,3}\.[0-9]{1,3}\b'
+pat="$pat"'|([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
+pat="$pat"'|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'
+pat="$pat"'|Fabiszewski|Pawe.{0,2} Fab'
+hits=$(grep -rInE "$pat" . --exclude-dir=.git --exclude=check.sh || true)
+if [ -n "$hits" ]; then echo "$hits"; note "no host identifiers" "FAIL"; fail=1
+else note "no host identifiers" "ok"; fi
+
+exit $fail

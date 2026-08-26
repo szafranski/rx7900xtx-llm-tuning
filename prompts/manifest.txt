@@ -1,0 +1,5 @@
+P20K.txt  chars=66188  tokens=19049
+P50K.txt  chars=165188  tokens=48633
+P98K.txt  chars=323588  tokens=92379
+corpus/pl-mixed.raw  first400000chars -> tokens=130215  (chars/token=3.07, calosc=4483877)
+wikitext-2-raw/wiki.test.raw  first400000chars -> tokens=94598  (chars/token=4.23, calosc=1288556)

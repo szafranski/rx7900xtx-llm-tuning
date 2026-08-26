@@ -1,0 +1,18 @@
+=== f16c-oszczednosc-off-aspmdefault === vo=-75mV cap=272W perf=manual aspm=default spec=
+PPL f16c-oszczednosc-off-aspmdefault na zimno=5.9335 ref=5.9335
+  junction po soaku=78 C
+PPL f16c-oszczednosc-off-aspmdefault po soaku=5.9335 (przed: 5.9335)
+SOAK skroty: 6 przebiegow, 6 unikalnych, odniesienie=f8875738ae9c
+UWAGA: wyjscie nie jest powtarzalne pod obciazeniem: ['1577d63589d7', '1abb3c991d3a', '47a93c62c8f3', 'c3d50dee39cb', 'd76d841a36cf', 'f8875738ae9c']
+DMESG f16c-oszczednosc-off-aspmdefault amdgpu-incydenty: bazowo=0 teraz=0 NOWE=0
+F16C DONE
+PRZYWROCONO cap=272W perf=auto aspm=default
+=== f16c-oszczednosc-off-aspmdefault === vo=0mV cap=272W perf=manual aspm=default spec=
+PPL f16c-oszczednosc-off-aspmdefault na zimno=5.9335 ref=5.9335
+  junction po soaku=79 C
+PPL f16c-oszczednosc-off-aspmdefault po soaku=5.9335 (przed: 5.9335)
+SOAK skroty: 6 przebiegow, 6 unikalnych, odniesienie=f8875738ae9c
+UWAGA: wyjscie nie jest powtarzalne pod obciazeniem: ['1577d63589d7', '1abb3c991d3a', '47a93c62c8f3', 'c3d50dee39cb', 'd76d841a36cf', 'f8875738ae9c']
+DMESG f16c-oszczednosc-off-aspmdefault amdgpu-incydenty: bazowo=0 teraz=0 NOWE=0
+F16C DONE
+PRZYWROCONO cap=272W perf=auto aspm=default
