@@ -22,7 +22,7 @@ spec(){ case "$1" in
   ngsimple) echo "--spec-type draft-mtp,ngram-simple $SPECBASE" ;;
   ngmapk)   echo "--spec-type draft-mtp,ngram-map-k $SPECBASE" ;;
 esac; }
-eval "$(grep '^Q=' f8.sh)"
+eval "$(grep '^Q=' bench-power-cap.sh)"
 trap 'kill_srv' EXIT
 kill_srv
 for v in none mtp chain ngmod ngsimple ngmapk; do

@@ -38,8 +38,12 @@ is dense, so generating one token requires reading every byte of it:
 ```
 
 That is the ceiling, and it does not move. Speculative decoding does not make a
-pass faster; it commits several tokens per pass. At 47.6 tok/s against a 23.8
-baseline we are getting 2.00 accepted tokens per weight read.
+pass faster; it commits more than one token per pass, so the observed 2.00x is
+consistent with averaging about two committed tokens per weight read. The
+measurement is the throughput ratio; the per-pass figure is an inference from
+it, not something the harness counts directly. Draft acceptance is recorded per
+request as `accept_pct` if you want the related number the harness does
+measure.
 
 On a mixture-of-experts model with, say, 3B active parameters, each token
 already reads a small fraction of the weights, so generation is far less
@@ -65,9 +69,12 @@ the more speculation has to offer.
 
 ## The n-gram component only pays off across turns
 
-`ngram-map-k` was neutral on a single request and cut about 21 percent off the
-wall time of a ten-turn session (`data/multiturn-session.jsonl`,
-`data/single-shot.jsonl`). It costs 38-46 MiB of host RAM and no measurable
+`ngram-map-k` was neutral on a single request (`data/single-shot.jsonl`) and cut
+about 21 percent off the wall clock of a ten-turn session. The session figure is
+the `session_s` field of the summary record in `data/multiturn-session.jsonl`,
+compared between the variant with `ngram-map-k` and the one without, over the
+same replayed transcript (`prompts/turns.json`); `scripts/analyze_multiturn.py`
+does the comparison. It costs a few tens of MiB of host RAM and no measurable
 VRAM at 128K.
 
 This is worth stating plainly because it has a methodological consequence: a

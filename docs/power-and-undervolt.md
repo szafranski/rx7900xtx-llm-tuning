@@ -3,22 +3,41 @@
 Nothing here overclocks. The power cap only ever moves downward from the
 factory 303 W, memory clock is untouched, and the voltage offset is negative.
 
-## Settings and what they cost
+## The power cap
 
-Relative to stock (303 W, 0 mV, unrestricted clock), running at 272 W:
+`data/power-cap-sweep.jsonl`, two runs per setting, identical prompt and
+generated text, so joules per token is a valid comparison here:
 
-| | change |
-|---|---:|
-| board power | -10% |
-| throughput | -2.2% |
-| energy per token | -7.9% |
-| junction temperature | -8 C |
+| cap | tok/s | board W | J/token | junction max |
+|---|---:|---:|---:|---:|
+| 303 W (stock) | 59.54 | 301.8 | 5.069 | 89 C |
+| 288 W | 59.00 | 287.4 | 4.871 | 84 C |
+| 272 W | 58.22 | 271.8 | 4.668 | 81 C |
 
-Adding the 2200 MHz clock cap on top brings the profile to roughly 11.9 percent
-less energy per token, for about 5 percent less speed than the
-maximum-performance variant.
+272 W against stock: 2.2 percent less throughput, 9.9 percent less board power,
+7.9 percent less energy per token, 8 C cooler.
 
 272 W is the floor the vBIOS accepts on this card, not a value we picked.
+
+## The clock cap
+
+`data/clock-cap-sweep.jsonl`, all at the 272 W cap, two runs per setting:
+
+| max SCLK | tok/s | board W | J/token |
+|---|---:|---:|---:|
+| 3045 (uncapped) | 58.25 | 271.8 | 4.666 |
+| 2400 | 58.01 | 266.6 | 4.596 |
+| 2200 | 56.47 | 246.4 | 4.364 |
+| 2000 | 54.08 | 223.6 | 4.134 |
+| 1800 | 51.14 | 211.4 | 4.133 |
+
+Efficiency stops improving below 2000 MHz: 1800 buys nothing over 2000 in
+J/token and costs a further 5 percent of throughput. We took 2200 rather than
+2000 to keep more speed, accepting slightly worse efficiency.
+
+Cap and clock together, against stock: **13.9 percent less energy per token for
+5.2 percent less throughput** (5.069 to 4.364 J/token, 59.54 to 56.47 tok/s).
+Neither sweep includes the undervolt.
 
 ![Energy per generated token](../charts/soak-energy.svg)
 
@@ -26,21 +45,50 @@ maximum-performance variant.
 
 The card sits at its power limit continuously under decode load, so the limit,
 not the clock target, decides the operating point. Lowering it moves the whole
-voltage-frequency curve down. The clock cap then removes the top of the curve
-where the last few percent of speed costs disproportionate power: the knee sat
-near 2000 MHz at stock voltage and moved to about 2200 MHz once the undervolt
-was applied, which is why 2200 is the value in the profile.
+voltage-frequency curve down. The clock cap then removes the top of the curve,
+where the last few percent of speed costs disproportionate power.
 
-## The undervolt limit is not where the driver says it is
+## The undervolt stops taking effect long before the driver says so
 
-`-150 mV` was rejected in practice without any crash or error: the card kept
-running and produced plausible output. That is the whole reason this repository
-has an output-comparison gate rather than a stability test.
+Without a clock cap, the offset behaves as expected.
+`data/undervolt-sweep.jsonl`, at the 272 W cap, two runs each:
 
-Below about -75 mV, with a clock cap active, the offset is silently clamped.
-`pp_od_clk_voltage` reports the value you requested. The only sysfs channel that
-reveals the clamp is `in0_input`. `scripts/amdgpu-profile.sh` reads the applied
-value back and fails rather than trusting the write.
+| offset | tok/s |
+|---|---:|
+| 0 mV | 58.29 |
+| -25 mV | 58.84 |
+| -50 mV | 59.40 |
+| -75 mV | 59.85 |
+| -100 mV | 60.24 |
+| -125 mV | 60.56 |
+
+With a 2200 MHz clock cap in place it stops.
+`data/undervolt-sweep-capped.jsonl`, same two-run structure:
+
+| offset | tok/s | board W |
+|---|---:|---:|
+| -100 mV | 57.27 | 235.3 |
+| -125 mV | 57.31 | 235.9 |
+| -150 mV | 57.30 | 236.3 |
+| -175 mV | 57.29 | 236.0 |
+| -200 mV | 57.31 | 235.7 |
+
+Requesting an extra 100 mV of undervolt changes nothing measurable. The driver
+accepts the write and `pp_od_clk_voltage` reports the value back.
+
+`data/undervolt-clamp-vddgfx.tsv` shows what the card actually did. At the
+2200 MHz cap, -75 mV produced 715.6 mV average VDDGFX and -200 mV produced
+704.8 mV: 10.8 mV of movement for a 125 mV request, at equal power and
+identical perplexity. At 3045 MHz the same -75 mV request produced 792.1 mV, so
+the clock cap is what pins the voltage, not the offset.
+
+This is why `scripts/amdgpu-profile.sh` reads the applied value back through the
+voltage channel and fails rather than trusting the write, and why the setting we
+ship is -75 mV: it is inside the range that has an effect.
+
+An offset well past this point does not crash the card. It keeps running and
+keeps producing plausible output, which is the reason this repository has an
+output-comparison gate rather than a stability test.
 
 ## Stability
 
@@ -54,30 +102,43 @@ value back and fails rather than trusting the write.
 | junction max | 86 C |
 | board power mean / max | 213.2 W / 261.0 W |
 | output sequence | matched the reference, 11 positions |
-| throughput difference vs 0 mV | 0.08% |
 
 The output-sequence result is the one that took work to get right, and its
 limits are set out in [output-stability.md](output-stability.md).
 
 ## ASPM
 
-`performance` bought about 1 percent of throughput under load and cost about
-1.5 W continuously at idle, plus 3.2-3.9 W on the CPU package at idle. Under
-load the CPU package difference was below measurement noise, so the energy
-saving from leaving ASPM at `default` survives.
+`performance` bought about 1 percent of throughput under load
+(`data/aspm-under-load.jsonl`) and cost about 3.9 W on the CPU package at idle
+(`data/aspm-cpu-package.jsonl`). Under load the CPU package difference was below
+measurement noise.
 
-For a machine that is idle most of the day, `default` wins. Data:
-`data/aspm-under-load.jsonl`, `data/aspm-idle.jsonl`,
-`data/aspm-cpu-package.jsonl`.
+On the GPU rail alone the idle differences are inside the run-to-run spread and
+we do not claim a figure for them; the CPU package is where the cost shows up,
+because ASPM governs the whole PCIe complex and the root complex sits in the
+CPU IO die.
+
+For a machine that is idle most of the day, `default` wins.
 
 ## Energy per token is the wrong metric when the setting changes the token count
 
-This bit us and it is easy to repeat.
+Reasoning effort `medium` shows better joules per token than `off`, and costs
+several times more energy to answer the same question, because it emits far
+more tokens. The per-token metric improves while the thing being measured gets
+worse.
 
-Reasoning effort `medium` shows the best joules per token of any reasoning
-setting, and costs 1.2x to 4.8x more energy to answer the same question, because
-it emits far more tokens. The per-token metric was improving while the thing we
-actually cared about got worse.
+Same question, warm cache, net of idle power
+(`data/reasoning-energy-per-answer.jsonl`, `data/reasoning-energy-hard.jsonl`):
+
+| question | reasoning | tokens | energy | answer length |
+|---|---|---:|---:|---:|
+| straightforward | off | 250 | 1001 J | 1207 chars |
+| straightforward | medium | 732 | 2662 J | 975 chars |
+| hard | off | 765 | 2764 J | 3334 chars |
+| hard | medium | 3762 | 13352 J | 4933 chars |
+
+2.7x the energy for a *shorter* answer on the straightforward question, and
+4.8x on the hard one.
 
 Energy per token is only meaningful between settings that generate the same
 number of tokens. That condition holds for the power, clock and ASPM

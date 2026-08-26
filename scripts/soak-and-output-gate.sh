@@ -2,7 +2,7 @@
 # Faza 16 krok 3: soak nastawy DOCELOWEJ (spekulacja + GPU razem).
 # Wszystkie soaki fazy 9-14 chodzily na czystym draft-mtp. Od fazy 15 nastawa
 # docelowa ma tez ngram-map-k, a soak testuje konkretna kombinacje, nie warstwy
-# osobno. Poprawki wobec f10comb.sh i f11b.sh:
+# osobno. Poprawki wobec bench-profile-combinations.sh i bench-stock-303w.sh:
 #   1. kill_srv jest PRZED bramka po soaku - tam bylo po niej, wiec perplexity
 #      walczylo o VRAM z zywym serwerem.
 #   2. skrot sha1 kazdego przebiegu soaka (poprawka w soak.py), bo po fazie 14
@@ -41,7 +41,7 @@ spec(){ case "$1" in
   mtp)    echo "--spec-type draft-mtp $SPECBASE" ;;
   ngmapk) echo "--spec-type draft-mtp,ngram-map-k $SPECBASE" ;;
 esac; }
-eval "$(grep '^Q=' f8.sh)"
+eval "$(grep '^Q=' bench-power-cap.sh)"
 jt(){ echo $(($(cat $H/temp2_input)/1000)); }
 kill_srv(){ pgrep -f "[l]lama-server.*8099" >/dev/null && { pkill -f "[l]lama-server.*8099"; sleep 5; }; return 0; }
 cool(){ for i in $(seq 1 36); do [ "$(jt)" -le 55 ] && break; sleep 5; done; echo "  start junction=$(jt) C"; }
@@ -100,7 +100,7 @@ python3 soak.py --prompt prompts/P20K.txt --question "$Q" --max-tokens 1200 --re
   --secs "$SOAK" --out "${SOAKOUT}.jsonl" --tsv "${SOAKOUT}.tsv" 2>&1 | tail -n 20
 echo "  junction po soaku=$(jt) C" | tee -a $OUT
 kill -TERM $WD 2>/dev/null
-kill_srv   # PRZED bramka: w f11b.sh perplexity chodzilo przy zywym serwerze
+kill_srv   # PRZED bramka: w bench-stock-303w.sh perplexity chodzilo przy zywym serwerze
 p2=$(ppl "$TAG-po-soak"); echo "PPL $TAG po soaku=$p2 (przed: $p)" | tee -a $OUT
 REFSEQ="results/reference-sequence-$TAG.json"
 python3 - <<PY | tee -a $OUT

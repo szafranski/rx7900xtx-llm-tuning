@@ -2,18 +2,25 @@
 
 ## Context profiles
 
-| context | KV cache | typical decode | note |
-|---|---|---:|---|
-| 32K | `q8_0` / `q8_0` | about 70 tok/s | earlier measurement |
-| 65K | `q8_0` / `q8_0` | about 70 tok/s | earlier measurement |
-| 128K | `q8_0` / `turbo4` | about 52 tok/s | the profile we run |
+At a 32K context with `q8_0` KV cache, decode ran at about 70 tok/s across a
+wide parameter sweep, against 35.18 tok/s with speculation disabled
+(`data/context-32k.jsonl`).
 
-`turbo4` saves roughly 1.2 GiB of VRAM at 128K, which is what makes the 128K
-profile fit alongside the vision projector. It is a fork-only cache type; see
-[setup.md](setup.md).
+At 128K the cache type is what matters
+(`data/context-128k-cache-types.jsonl`, one run each, 92K-token prompt):
+
+| KV cache | decode | VRAM |
+|---|---|---:|---:|
+| `q8_0` / `q8_0` | 53.13 tok/s | 22945 MiB |
+| `q8_0` / `turbo4` | 52.31 tok/s | 21751 MiB |
+| `q8_0` / `q8_0` + projector | 53.02 tok/s | 23833 MiB |
+
+`turbo4` gives up 1.5 percent of throughput and saves 1194 MiB, which is what
+makes a 128K context fit alongside the vision projector on a 24 GB card. It is
+a fork-only cache type; see [setup.md](setup.md).
 
 A needle-retrieval check at 93 percent of the context window passed in every
-variant, including with the projector loaded. Data: `data/context-128k.jsonl`.
+variant, including with the projector loaded (`data/context-128k.jsonl`).
 
 ## The quality gate hit its ceiling
 
@@ -25,10 +32,7 @@ zero errors. A harder variant of the same set behaved the same way.
 condition has no power to discriminate between them. It rules out a gross
 regression on this task type and nothing more. In particular it does not show
 that long free-form output is unchanged, which is the case where a subtle
-quality difference would actually show up.
-
-We are reporting it because leaving it out would make the stability evidence
-look stronger than it is. Data: `data/quality-keyed.jsonl`,
+quality difference would actually show up. Data: `data/quality-keyed.jsonl`,
 `data/quality-keyed-hard.jsonl`, keys in `data/quality-keys*.json`, scoring in
 `scripts/score_quality.py`.
 
@@ -37,16 +41,28 @@ are synthetic. No third-party text is redistributed here.
 
 ## Reasoning effort
 
-`medium` improved the tokens-per-second counter by about 4 percent in English
-and 8.8 percent in Polish, and made each answer take 1.2x to 4.8x more time and
-energy, because it generates a great deal more. The reasoning budget is the
-largest single cost lever in the configuration.
+`medium` improved the tokens-per-second counter (70.03 to 72.87 in English,
+76.20 in Polish; `data/context-32k.jsonl`) and cost 2.7x to 4.8x more energy per
+answer, because it generates a great deal more. The reasoning budget is the
+largest single cost lever in the configuration. Budget 2048 and 8192 were
+indistinguishable on these questions, because neither was reached.
 
-See the energy-per-token warning in
-[power-and-undervolt.md](power-and-undervolt.md).
+The full table is in
+[power-and-undervolt.md](power-and-undervolt.md#energy-per-token-is-the-wrong-metric-when-the-setting-changes-the-token-count).
 
 ## Vision projector
 
-The Q8_0 projector passed every image test. BF16 used about 288 MiB more VRAM
-with no improvement on any test we ran. Data: `data/vision.jsonl`,
+`data/projector-q8-vs-bf16.jsonl`, three image tasks against two projector
+builds:
+
+| projector | VRAM | pl-doc | pl-tabela | pl-wykres |
+|---|---:|---:|---:|---:|
+| Q8_0 | 21065 MiB | 72.09 | 84.56 | 82.72 |
+| BF16 | 21393 MiB | 69.20 | 84.75 | 82.54 |
+
+BF16 costs 328 MiB and is not faster. Both answered all three tasks. Three
+tasks is not a quality evaluation, so the claim here is narrow: we found no
+reason to pay the 328 MiB.
+
+Further image runs under the shipped profile are in `data/vision.jsonl` and
 `data/idle-with-projector.jsonl`.

@@ -27,22 +27,26 @@ others have published. That undervolting this card improves efficiency at a
 small throughput cost is widely reported anecdotally, and our figures line up
 with those reports. Neither is presented as a discovery.
 
-What we have not found elsewhere is a method for checking that an undervolt did
-not quietly change inference output, together with the negative result that made
-us build the check correctly. That is [docs/output-stability.md](docs/output-stability.md),
-and it is the reason this repository exists.
+The part we could not find an existing writeup of, and went looking for, is a
+check that an undervolt did not quietly change inference output. The advice we
+found treats "no crash, same tok/s" as sufficient. On this card an offset past
+-100 mV silently stopped taking effect without crashing anything, so that check
+would have reported success. What we built instead, and what it does and does
+not establish, is [docs/output-stability.md](docs/output-stability.md).
 
 ## Headline numbers
 
-Measured over a 30-minute soak at 272 W / -75 mV / 2200 MHz, 128K context,
-1200 tokens generated per request:
+Speculation and stability figures come from a 30-minute soak at
+272 W / -75 mV / 2200 MHz, 128K context, 1200 tokens per request. The power
+figures come from the cap and clock sweeps, two runs per setting, on identical
+generated text. Every row names its file in `data/manifest.csv`.
 
 | | |
 |---|---:|
 | decode, no speculation | 23.8 tok/s |
 | decode, `draft-mtp,ngram-map-k` | 47.6 tok/s |
-| board power vs stock 303 W | -10% |
-| energy per token vs stock | -7.9% (-11.9% with the clock cap) |
+| board power vs stock 303 W | -9.9% |
+| energy per token vs stock | -7.9% (-13.9% with the clock cap) |
 | throughput cost of the cap | -2.2% |
 | junction max over 30 minutes | 86 C |
 | perplexity before / after soak | 5.9335 / 5.9335 |
@@ -100,12 +104,16 @@ fork-dependent results from the ones that transfer anywhere.
 
 ```
 docs/     the write-up, one file per topic
-data/     raw per-request records, one .jsonl per experiment
-          manifest.csv lists every file with its record count and SHA-256
+data/     raw per-request records, one file per experiment
+          manifest.csv maps every file to the experiment, the GPU profile in
+          effect, the producing script, its record count and its SHA-256
 prompts/  the fixed prompts and replayed session the benchmarks use
 scripts/  the benchmark harness and the GPU profile script
 charts/   SVG charts and make_charts.py, which regenerates them from data/
 ```
+
+Every figure quoted in `docs/` names the file it came from. If one does not,
+that is a bug worth reporting.
 
 Start with [docs/setup.md](docs/setup.md), then
 [docs/methodology.md](docs/methodology.md) if you intend to trust a number, then

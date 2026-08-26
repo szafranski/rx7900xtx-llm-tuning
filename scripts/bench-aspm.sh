@@ -28,7 +28,7 @@ CAP_OLD=$(cat $CAP)
 SPEC="--spec-type draft-mtp,ngram-map-k --spec-draft-n-max 3 --spec-draft-p-min 0.60"
 REAS="--reasoning on --reasoning-effort medium --reasoning-budget 8192 --reasoning-format deepseek"
 BASE="-ngl 99 -c 65536 -fa on -ctk q8_0 -ctv q8_0 -ctkd q8_0 -ctvd q8_0 -np 1 -ub 1024 -b 4096 --no-warmup"
-eval "$(grep '^Q=' f8.sh)"   # ten sam prompt co fazy 8, 9, 10
+eval "$(grep '^Q=' bench-power-cap.sh)"   # ten sam prompt co fazy 8, 9, 10
 jt(){ echo $(($(cat $H/temp2_input)/1000)); }
 kill_srv(){ pgrep -f "[l]lama-server.*8099" >/dev/null && { pkill -f "[l]lama-server.*8099"; sleep 5; }; return 0; }
 cool(){ for i in $(seq 1 36); do [ "$(jt)" -le 55 ] && break; sleep 5; done; echo "  start junction=$(jt) C"; }

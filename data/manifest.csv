@@ -2,17 +2,30 @@ file,experiment,configuration,script,records,bytes,sha256
 aspm-cpu-package.jsonl,ASPM effect on CPU package power,"272 W, -75 mV, 2200 MHz",bench-aspm-cpu.sh,12,8761,23ac2c9f15839418a99d57cf4b45818cdc8589201d5da0a8bd37aece1b3cc9da
 aspm-idle.jsonl,"ASPM at idle, GPU rail","272 W, -75 mV, 2200 MHz",bench-aspm-idle.sh,6,2896,9f08dd9cccfed20979bccabe96dc2b59561179f902609bfcd8fa1ab5fd77c2ca
 aspm-perplexity.tsv,Perplexity before and after the ASPM sweep,"272 W, -75 mV, 2200 MHz",bench-aspm.sh,2,48,95c27142066138ac067f866fa428dbffdbabaebdb36210ecab86daa6bb12f982
+aspm-sweep-early.jsonl,"First ASPM sweep, before the profile was fixed",varied,bench-aspm-early.sh,6,5946,504df3e59453b3bda532b89db3037ae116492cd41d71adc71e82f5a324c126ef
 aspm-under-load.jsonl,ASPM default/performance/powersave under decode load,"272 W, -75 mV, 2200 MHz",bench-aspm.sh,12,11928,04afc8d99adefcfa615f4ab7482c7daf141242ca6ef86c4fb155c9447927e97c
+clock-cap-sweep.jsonl,Max SCLK 3045 down to 1800 MHz,"272 W, 0 mV",bench-clock-cap.sh,10,9729,f3cd011301b70cd2b509b9e2bcdf3d7f0c5b4f498def2c098c617ab6e0c31b22
+context-128k-cache-types.jsonl,KV cache types at 128K on a 92K prompt,"272 W, -75 mV, 2200 MHz",bench-context-65k.sh,4,3971,88e64102570e54f5607f3c9bb0798fcaeb587c4cc92388ab81480804ed1bc0c7
 context-128k.jsonl,"Decode and VRAM at 128K context, with and without projector","272 W, -75 mV, 2200 MHz",bench-context.sh,12,15356,34173bd297860c24a70d313c7965884754be2b77dd8b0babd57df26ecd0992a6
+context-32k.jsonl,"Parameter sweep at 32K context: p-min, ubatch, reasoning, MMVQ","272 W, -75 mV",bench-context-32k.sh,15,59864,d8bc01e2ae9893c356ea4aba56f574f07cc97e2df51f248081f2e528ab243cc4
 display-refresh-idle.jsonl,Idle power at 144 Hz vs 120 Hz,"272 W, -75 mV, 2200 MHz",bench-display-refresh.sh,6,2872,8d6cc0335760f63020667e479cc6ad9a13466423b347207aa698dfc8295b358a
+energy-early-soak.jsonl,"Early soak, before the profile was fixed",varied,bench-energy-early.sh,1,8934,0ebc2d5e60abddf5a543385a8a803c54e58d778381a10323d5a1ef01cf0e71a6
+energy-early.jsonl,"Early energy measurements, before the profile was fixed",varied,bench-energy-early.sh,11,9352,1d8938a683a80490d5885fdc2a744a644c26e969a1a49285c96bba40e6adc738
 idle-power.jsonl,Idle GPU power baseline,factory and capped,bench-idle.sh,10,4805,db5617bc4467f165c5e0cda557df2d04fd68862786ee18f2d151059da7ccb929
 idle-with-projector.jsonl,Idle power with the vision projector loaded,"272 W, -75 mV, 2200 MHz",bench-idle-projector.sh,6,2860,76d1be3110037355ff626b3c0804694aa7e3b996ec65dd3c8227c4799d9a7764
+multiturn-contents.jsonl,Per-turn output of the multi-turn session,"272 W, -75 mV, 2200 MHz",bench-multiturn.sh,3,8358,6be3f1b1fcced82b26b9afe5bc4d13c22da9185ef834639b6c63723627e7f990
 multiturn-session.jsonl,"Ten-turn session, replayed transcript","272 W, -75 mV, 2200 MHz",bench-multiturn.sh,17,47821,da0fed2aeb9823627e35c59ac052380c424ea0969d9eb2c50e7548157476af04
 perplexity-chunks.txt,"Per-chunk perplexity, wikitext-2 test split",factory,bench-idle.sh,616,6188,031372c19798b9f219aebd13ed4b5a3fc546f4a0ca11c8f8eedca73769f3ce10
+power-cap-sweep.jsonl,Power cap 303 / 288 / 272 W under decode load,"0 mV, unrestricted clock",bench-power-cap.sh,8,7738,3c933b9e2442a0e526c0f94328d8f14b3bb98f06540d30575027047a0c055f69
+profile-combinations.jsonl,"Cap, clock and offset combinations",varied,bench-profile-combinations.sh,2,2076,8d2c0fb65cdb95b5fcd15f1c05374fcbe905702ea408f819e8c681e2ef7c102c
+profile-final.jsonl,Confirmation run of the chosen profile,"272 W, -75 mV, 2200 MHz",bench-profile-final.sh,4,4097,f1b40e6f158ea4469060d8c24e18e44ea1c0111b38af412e35d058fd234f9302
+projector-q8-vs-bf16.jsonl,Three image tasks against Q8_0 and BF16 projectors,"272 W, -75 mV, 2200 MHz",bench-projector.sh,9,7169,b9eeb9894a61baf57e39f3516ed927eb88efae6a543eaafaa35c1296eab79005
 quality-keyed-hard.jsonl,Harder keyed variant of the same corpus,"272 W, -75 mV, 2200 MHz",bench-quality.sh,60,77430,517c7a3cc4f0a64f1b7bd83c2894143b2b17d886d7387fd1edaebf65f8a5d45a
 quality-keyed.jsonl,22 keyed retrieval tasks over a 50K corpus,"272 W, -75 mV, 2200 MHz",bench-quality.sh,72,75363,68584fc4886051010b7f135726bec95dbc51a22826eb68fa54de360f6d34cbb6
 quality-keys-hard.json,Answer keys for the harder keyed tasks,n/a,gen_quality_corpus_hard.py,10,1779,6121fadd375be07a31c58eecb81f8149500b37b458e85cbf7f86715a876fabc4
 quality-keys.json,Answer keys for the keyed retrieval tasks,n/a,gen_quality_corpus.py,12,1690,d32237422eba6af4c17f4f74c253cebe278a5239bf349eaf8f916f9720e9d2e3
+reasoning-energy-hard.jsonl,The same on a question that generates far more,"272 W, -75 mV",bench-reasoning-energy-hard.sh,4,3973,bf5de2dd92b1d37f2de879c7de58f09641225ea32c6a6fc34f2e9e59c90d7e04
+reasoning-energy-per-answer.jsonl,Energy to answer one question at reasoning off / medium,"272 W, -75 mV",bench-reasoning-energy.sh,6,6014,dee3a3c23105865b87b2486552de8f0533260bd892ce4942ee98fddccaa42dbc
 reference-sequence-ngram.json,Reference output-hash sequence the gate compares against,"272 W, -75 mV, 2200 MHz, ngram-map-k",soak-and-output-gate.sh,70,1120,c189e1169d3984aa788946dc99cf1c81514390a7df5b5435af5b5cfa6d3aa1e0
 reference-sequence-nospec.json,Reference output-hash sequence the gate compares against,"272 W, -75 mV, 2200 MHz, no speculation",soak-and-output-gate.sh,6,96,da7f984257d17099b8e1dc757c10a61e8ccb6b377f50930e38810bc988a4eac7
 single-shot.jsonl,"Single-request decode, n-gram on and off","272 W, -75 mV, 2200 MHz",bench-speculation.sh,12,12524,fa0ab2aa52a0c03cb36d935c0aae14d0391e2b59e74dfde9929b24372872525a
@@ -20,6 +33,12 @@ soak-efficient-ngram-runs.jsonl,"30 min soak, per-request records and output has
 soak-efficient-ngram.jsonl,"30 min soak, summary record","272 W, -75 mV, 2200 MHz, ngram-map-k",soak-and-output-gate.sh,0,2100,d9d5b3a990e2eab662f15dbff53adba8c951aa63b31c4f97c1a58237b03f0255
 soak-efficient-nospec-runs.jsonl,"30 min soak, per-request records and output hashes","272 W, -75 mV, 2200 MHz, no speculation",soak-and-output-gate.sh,2,6500,22cee8896cf047d1c9dd90a5b6e1c91e92d773f4ff2011e37e9e9cebb270b519
 soak-efficient-nospec.jsonl,"30 min soak, summary record","272 W, -75 mV, 2200 MHz, no speculation",soak-and-output-gate.sh,0,1196,599ef71ab6693020d17ad34ac3e0989b6dc8369015545e2cc07d8b678b6ec3dc
+spec-mtp-early.jsonl,First MTP measurements,"303 W, 0 mV",bench-context-32k.sh,19,72449,a0a87aa63c308b2aafa45056318b7004d0d020b760c8552e180b2318a0d41918
 spec-variants-paired.jsonl,"Same variants run twice, hashes compared position by position","303 W, 0 mV, auto clock",bench-spec-variants.sh,8,8518,128c724c7415d3dcb168a64098c1ab7808c3123699ca309ef19bf5921a9180ff
 spec-vs-none.jsonl,"Speculative decoding variants, 20K prompt","303 W, 0 mV, auto clock",bench-speculation.sh,6,25974,ad1702b00aa8109163f5897af54f9ce0d55cceba42b917babe2fbf5e87d25b29
+stock-303w-soak.jsonl,Soak at factory settings,"303 W, 0 mV, unrestricted clock",bench-stock-303w.sh,1,27421,09ef62cff672da34ce46048fdeefd3fa136b091ec816969c797e100ccda8207b
+stock-303w.jsonl,Loaded reference run at factory settings,"303 W, 0 mV, unrestricted clock",bench-stock-303w.sh,2,2132,2ea9c8feb42c163e1ebe8b44433e2742fc9d7483202d99bf9c34bf82f95ceefa
+undervolt-clamp-vddgfx.tsv,"Applied VDDGFX at -75 vs -200 mV, with and without the clock cap",272 W,bench-undervolt-clamp.sh,4,285,e267c8147339c2e483fb9eba313695f968ff274452c5ffd08009085d5d2b2ec4
+undervolt-sweep-capped.jsonl,"Voltage offset -100 to -200 mV, showing the clamp","272 W, 2200 MHz",bench-undervolt-capped.sh,10,10391,ee83f92498d2aac75c6601f2fc2587ee7582b32e184f84c37332a0372978b90c
+undervolt-sweep.jsonl,Voltage offset 0 to -125 mV,"272 W, unrestricted clock",bench-undervolt-capped.sh,14,14054,d141d7678faf6dd59206266626346b12f52f10102561a654383edea14d73fd81
 vision.jsonl,"Vision prompts, Q8_0 vs BF16 projector","272 W, -75 mV, 2200 MHz",bench-speculation.sh,6,9337,cbddfa1d14fe1b391d41a465f76407dce2e9373a29603db23dce6ee3ef082207

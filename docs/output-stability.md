@@ -36,10 +36,6 @@ sessions. That is what the current gate does
 (`scripts/soak-and-output-gate.sh`), and the sequence it compares against lives
 in `data/reference-sequence-*.json`.
 
-This is the part of the work most likely to be useful to someone else: the
-result is unremarkable, but the gate design is easy to get wrong in a way that
-looks like a hardware fault.
-
 ## What the data shows
 
 **Twelve runs, three ASPM settings, throughput spread 6.5 percent, two distinct

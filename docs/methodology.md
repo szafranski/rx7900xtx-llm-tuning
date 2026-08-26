@@ -62,14 +62,23 @@ raw data attached.
 ## Reproducing
 
 You need the model, `wikitext-2-raw/wiki.test.raw`, and the build in
-[setup.md](setup.md). The scripts expect to run from a directory containing
-`prompts/`, `results/` and `logs/`, and write into `results/` under the names
-used in `data/`.
+[setup.md](setup.md).
+
+The scripts resolve `prompts/`, `results/` and `logs/` relative to the current
+working directory, not to their own location, and they write into `results/`
+under the file names used in `data/`. They also expect the helper scripts beside
+them on the path they are invoked from. So run them from a scratch directory
+with everything linked into it:
 
 ```
-scripts/amdgpu-profile.sh apply          # or 'reset' to return to factory
-WARIANT=oszczednosc SPEC=ngmapk scripts/soak-and-output-gate.sh 1800
+mkdir -p run/results run/logs && cd run
+ln -s ../scripts/* ../prompts .
+./amdgpu-profile.sh apply                # or 'reset' to return to factory
+WARIANT=oszczednosc SPEC=ngmapk ./soak-and-output-gate.sh 1800
 ```
+
+Paths to the model and the built binaries are hardcoded near the top of each
+script as `/home/user/llm/...` and need editing for your machine.
 
 The scripts and their inline comments are in Polish. The `docs/` are the English
 account.

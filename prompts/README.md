@@ -20,8 +20,9 @@ source files from `llama.cpp` (`llama-adapter.cpp`, `llama-arch.cpp`,
 `llama-batch.cpp`, `llama-chat.cpp`, `llama-context.cpp`), each preceded by a
 `// ==== FILE: name ====` header and truncated to the target length.
 
-That source is **MIT licensed, Copyright (c) 2023-2024 The ggml authors**, and
-it is redistributed here under those terms. It is not covered by the CC BY 4.0
+That source is MIT licensed, Copyright (c) 2023-2026 The ggml authors. The full
+notice is in [LICENSE.llama.cpp](LICENSE.llama.cpp) and travels with these
+files. It is not covered by the CC BY 4.0
 licence that applies to `../data/`, and the MIT notice above travels with it.
 
 Into each corpus we inserted one short block of our own:

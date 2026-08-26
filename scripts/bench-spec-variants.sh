@@ -15,7 +15,7 @@ OUT=results/spec-variants-paired.jsonl
 NMAX=3
 REAS="--reasoning on --reasoning-effort medium --reasoning-budget 8192 --reasoning-format deepseek"
 BASE="-ngl 99 -c 65536 -fa on -ctk q8_0 -ctv q8_0 -ctkd q8_0 -ctvd q8_0 -np 1 -ub 1024 -b 4096 --no-warmup"
-eval "$(grep '^Q=' f8.sh)"
+eval "$(grep '^Q=' bench-power-cap.sh)"
 jt(){ echo $(($(cat $H/temp2_input)/1000)); }
 kill_srv(){ pgrep -f "llama-server.*8099" >/dev/null && { pkill -f "llama-server.*8099"; sleep 5; }; return 0; }
 cool(){ for i in $(seq 1 24); do [ "$(jt)" -le 55 ] && break; sleep 5; done; }

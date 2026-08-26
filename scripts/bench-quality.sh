@@ -9,7 +9,7 @@
 set -u
 cd "$(dirname "$0")"
 OUT=${OUT:-results/quality-keyed.jsonl}
-KL=${KL:-klucze16.json}
+KL=${KL:-quality-keys.json}
 PR=prompts/Q16.txt
 REAS="--reasoning on --reasoning-effort medium --reasoning-budget 8192 --reasoning-format deepseek"
 BASE="-ngl 99 -c 65536 -fa on -ctk q8_0 -ctv q8_0 -ctkd q8_0 -ctvd q8_0 -np 1 -ub 1024 -b 4096 --no-warmup"

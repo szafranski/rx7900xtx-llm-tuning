@@ -1,0 +1,4 @@
+wariant	sclk_cap	vo_mV	vddgfx_avg_mV	vddgfx_max_mV	sclk_avg_MHz	moc_avg_W	jt_max_C	probki	ppl
+f11c-sclk2200-uv-75	2200	-75	715.6	723	2090	203.4	79	62	6.3124
+f11c-sclk2200-uv-200	2200	-200	704.8	727	2089	208.5	80	61	6.3124
+f11c-sclk3045-uv-75	3045	-75	792.1	859	2430	264.8	89	53	6.3124

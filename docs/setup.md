@@ -19,10 +19,14 @@ not available in upstream `llama.cpp`.
 ```
 repo:    https://github.com/TheTom/llama-cpp-turboquant   (fork)
 commit:  f91b7059427ea4901e2271763d308de1dd111373  (2026-08-22)
-version: b10540
+version: b10540   (self-reported by --version)
 cmake:   -DGGML_VULKAN=ON -DCMAKE_BUILD_TYPE=Release -DGGML_NATIVE=ON
 compiler: GCC 16.1.1
 ```
+
+The build directory in the scripts is named `...-b10539-reasoning` because it
+was created one commit earlier and reused. The binary that produced every number
+here reports `b10540 (f91b70594)`; the commit hash above is the authority.
 
 ### Which results depend on the fork
 

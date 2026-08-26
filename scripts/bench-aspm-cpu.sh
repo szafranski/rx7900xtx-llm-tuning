@@ -19,7 +19,7 @@ IDLESEC=${IDLESEC:-30}
 SPEC="--spec-type draft-mtp --spec-draft-n-max 3 --spec-draft-p-min 0.60"
 REAS="--reasoning on --reasoning-effort medium --reasoning-budget 8192 --reasoning-format deepseek"
 BASE="-ngl 99 -c 65536 -fa on -ctk q8_0 -ctv q8_0 -ctkd q8_0 -ctvd q8_0 -np 1 -ub 1024 -b 4096 --no-warmup"
-eval "$(grep '^Q=' f8.sh)"
+eval "$(grep '^Q=' bench-power-cap.sh)"
 
 jt(){ echo $(($(cat $H/temp2_input)/1000)); }
 polstate(){ grep -oE "\[[a-z]+\]" $POL | tr -d "[]"; }

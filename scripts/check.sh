@@ -47,12 +47,17 @@ else
   fail=1
 fi
 
-# 4. nothing host-specific slipped in
-pat='pfabi|/var/home/|atomic-pc|agentsjump|claudejump|llamaproxy|gpuremote|lumo-pve|\.lan\b'
-pat="$pat"'|\b(10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\.[0-9]{1,3}\.[0-9]{1,3}\b'
+# 4. nothing host-specific slipped in.
+# Patterns are split so this file never contains the literals it searches for,
+# which also stops a sanitiser pass from rewriting the check itself.
+u='pf'; u="${u}abi"
+n='Fabi'; n="${n}szewski"
+h='atomic-pc|agentsjump|claudejump|llamaproxy|gpuremote|lumo-pve'
+pat="$u|/var/home/|$n|($h)"
+pat="$pat"'|[A-Za-z0-9-]+\.lan'
+pat="$pat"'|(10|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\.[0-9]{1,3}\.[0-9]{1,3}'
 pat="$pat"'|([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
 pat="$pat"'|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'
-pat="$pat"'|Fabiszewski|Pawe.{0,2} Fab'
 hits=$(grep -rInE "$pat" . --exclude-dir=.git --exclude=check.sh || true)
 if [ -n "$hits" ]; then echo "$hits"; note "no host identifiers" "FAIL"; fail=1
 else note "no host identifiers" "ok"; fi

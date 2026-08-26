@@ -1,18 +1,18 @@
 # Settings that did not work
 
-Each of these was tried and measured. Negative results with numbers attached
-save the next person the run.
+Each of these was tried and measured.
 
 | setting | effect | data |
 |---|---|---|
 | `GGML_VK_DISABLE_MMVQ` | -9.1% decode with MTP enabled | `data/spec-vs-none.jsonl` |
-| `--ubatch-size 288` as the default | no decode gain, about -27% prefill | `data/context-128k.jsonl` |
+| `--ubatch-size 288` as the default | no decode gain, and 47.3 vs 53.0 tok/s on a 92K prompt with an image | `data/context-128k-cache-types.jsonl`, `data/context-32k.jsonl` |
 | `--spec-draft-n-max` 4, 5 or 6 | slower at every value, more VRAM | `data/spec-vs-none.jsonl` |
 | `--spec-type ngram-cache` | about -44% throughput | `data/spec-vs-none.jsonl` |
 | `--parallel 3` for a single stream | about -1% throughput, +1098 MiB VRAM | `data/context-128k.jsonl` |
-| BF16 vision projector | +288 MiB, no improvement | `data/vision.jsonl` |
-| ASPM `performance` | +1% under load, +1.5 W constant at idle | `data/aspm-idle.jsonl` |
-| voltage offset -150 mV | silently clamped, no crash, not applied | `data/soak-efficient-ngram-runs.jsonl` |
+| max SCLK 1800 MHz | no J/token gain over 2000 MHz, 5% slower | `data/clock-cap-sweep.jsonl` |
+| BF16 vision projector | +328 MiB, not faster | `data/projector-q8-vs-bf16.jsonl` |
+| ASPM `performance` | +1% under load, +3.9 W on the CPU package at idle | `data/aspm-cpu-package.jsonl` |
+| voltage offset past -100 mV | silently clamped under a clock cap, no crash | `data/undervolt-sweep-capped.jsonl`, `data/undervolt-clamp-vddgfx.tsv` |
 
 ## `GGML_VK_DISABLE_MMVQ` responds to presence, not value
 

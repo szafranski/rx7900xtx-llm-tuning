@@ -5,7 +5,7 @@
 # dopasowania, ktorych nigdy nie mierzylem osobno. Jesli nie mieszcza sie,
 # przyjeta flaga wysadza serwer w srodku dlugiej sesji agentowej.
 #
-# Poprawka wobec f5.sh: tam "vram_peak" bylo JEDNYM odczytem PO zakonczeniu
+# Poprawka wobec bench-context-65k.sh: tam "vram_peak" bylo JEDNYM odczytem PO zakonczeniu
 # przebiegu, wiec nie bylo szczytem. Tu chodzi probnik w tle co 0.5 s.
 set -u
 cd "$(dirname "$0")"
