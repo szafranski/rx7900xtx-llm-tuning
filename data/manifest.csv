@@ -30,9 +30,9 @@ reference-sequence-ngram.json,Reference output-hash sequence the gate compares a
 reference-sequence-nospec.json,Reference output-hash sequence the gate compares against,"272 W, -75 mV, 2200 MHz, no speculation",soak-and-output-gate.sh,6,96,da7f984257d17099b8e1dc757c10a61e8ccb6b377f50930e38810bc988a4eac7
 single-shot.jsonl,"Single-request decode, n-gram on and off","272 W, -75 mV, 2200 MHz",bench-speculation.sh,12,12524,fa0ab2aa52a0c03cb36d935c0aae14d0391e2b59e74dfde9929b24372872525a
 soak-efficient-ngram-runs.jsonl,"30 min soak, per-request records and output hashes","272 W, -75 mV, 2200 MHz, ngram-map-k",soak-and-output-gate.sh,2,33873,4a897b44727b82e1cf1439d50f607d5470d2457379cb98a513bd25c51cea7079
-soak-efficient-ngram.jsonl,"30 min soak, summary record","272 W, -75 mV, 2200 MHz, ngram-map-k",soak-and-output-gate.sh,0,2100,d9d5b3a990e2eab662f15dbff53adba8c951aa63b31c4f97c1a58237b03f0255
+soak-efficient-ngram.log,"30 min soak, console log from the superseded gate","272 W, -75 mV, 2200 MHz, ngram-map-k",soak-and-output-gate.sh,18,2100,d9d5b3a990e2eab662f15dbff53adba8c951aa63b31c4f97c1a58237b03f0255
 soak-efficient-nospec-runs.jsonl,"30 min soak, per-request records and output hashes","272 W, -75 mV, 2200 MHz, no speculation",soak-and-output-gate.sh,2,6500,22cee8896cf047d1c9dd90a5b6e1c91e92d773f4ff2011e37e9e9cebb270b519
-soak-efficient-nospec.jsonl,"30 min soak, summary record","272 W, -75 mV, 2200 MHz, no speculation",soak-and-output-gate.sh,0,1196,599ef71ab6693020d17ad34ac3e0989b6dc8369015545e2cc07d8b678b6ec3dc
+soak-efficient-nospec.log,"30 min soak, console log from the superseded gate","272 W, -75 mV, 2200 MHz, no speculation",soak-and-output-gate.sh,18,1196,599ef71ab6693020d17ad34ac3e0989b6dc8369015545e2cc07d8b678b6ec3dc
 spec-mtp-early.jsonl,First MTP measurements,"303 W, 0 mV",bench-context-32k.sh,19,72449,a0a87aa63c308b2aafa45056318b7004d0d020b760c8552e180b2318a0d41918
 spec-variants-paired.jsonl,"Same variants run twice, hashes compared position by position","303 W, 0 mV, auto clock",bench-spec-variants.sh,8,8518,128c724c7415d3dcb168a64098c1ab7808c3123699ca309ef19bf5921a9180ff
 spec-vs-none.jsonl,"Speculative decoding variants, 20K prompt","303 W, 0 mV, auto clock",bench-speculation.sh,6,25974,ad1702b00aa8109163f5897af54f9ce0d55cceba42b917babe2fbf5e87d25b29

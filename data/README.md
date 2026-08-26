@@ -43,6 +43,18 @@ one entry per request: `i`, `sha1`, `sha1_reasoning`, `t_rel`, `decode_tps`,
 plain list of `sha1` values the gate compares a later session against, position
 by position. See [../docs/output-stability.md](../docs/output-stability.md).
 
+`soak-efficient-ngram.log` and `soak-efficient-nospec.log` are the console output
+of the same runs, kept unmodified. They carry a warning in Polish that the output
+"is not reproducible under load", reporting 46 distinct hashes across 70 requests.
+**That warning is a false alarm and should not be read as a result.** It was
+printed by the earlier version of the gate, which compared every request in a
+session against the first request in that same session. `llama-server` carries
+cache state between requests, so those outputs are expected to differ; the
+comparison measured the cache, not the hardware. The gate committed here
+(`../scripts/soak-and-output-gate.sh`) compares matching positions across two
+sessions instead and would not print that line. The logs are kept because they
+are what the run actually produced, not because the warning stands.
+
 ## Provenance
 
 `perplexity-chunks.txt` holds per-chunk perplexity values computed over the
