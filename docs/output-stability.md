@@ -72,7 +72,7 @@ These limits are part of the result, not disclaimers appended to it.
   proves the *decoded text* matched. It says nothing about logits, tensor
   contents, or intermediate arithmetic. Two different logit vectors can decode
   to the same token. Calling this "bit-exact inference" would be wrong.
-- **The hash is truncated to 48 bits**, which is fine for detecting a
+- **The hash is truncated to 48 bits.** That is fine for detecting a
   regression and is not a cryptographic guarantee.
 - **The automated gate compares the response text only.** It records the
   reasoning hash but does not fail on it. The reasoning hashes cited above were

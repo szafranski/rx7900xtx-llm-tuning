@@ -22,8 +22,7 @@ source files from `llama.cpp` (`llama-adapter.cpp`, `llama-arch.cpp`,
 
 That source is MIT licensed, Copyright (c) 2023-2026 The ggml authors. The full
 notice is in [LICENSE.llama.cpp](LICENSE.llama.cpp) and travels with these
-files. It is not covered by the CC BY 4.0
-licence that applies to `../data/`, and the MIT notice above travels with it.
+files. The CC BY 4.0 licence that applies to `../data/` does not cover them.
 
 Into each corpus we inserted one short block of our own:
 

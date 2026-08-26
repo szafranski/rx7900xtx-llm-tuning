@@ -130,5 +130,5 @@ Measurements under `data/` are CC BY 4.0; see
 the English account of what they do.
 
 Reproduction reports are the useful kind of contribution here, especially from a
-different card. What one would need to contain is in
+different card. What such a report needs to contain is in
 [CONTRIBUTING.md](CONTRIBUTING.md).

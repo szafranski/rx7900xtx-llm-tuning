@@ -51,8 +51,8 @@ bandwidth-bound and there is much less headroom for this trick to recover. A
 published null result on such a model is not in conflict with this one. The
 axis that separates them is dense versus MoE, not the GPU.
 
-If you are deciding whether to try this: the more bandwidth-bound your setup,
-the more speculation has to offer.
+If you are deciding whether to try this, start from how bandwidth-bound your
+setup is. The more bound it is, the more speculation has to offer.
 
 ## Parameters
 
