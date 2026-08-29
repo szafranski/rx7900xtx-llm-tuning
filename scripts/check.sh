@@ -28,19 +28,23 @@ PY
 if [ -n "$bad" ]; then echo "$bad"; note "json" "FAIL"; fail=1; else note "json" "ok"; fi
 
 # 2. scripts parse
-for f in scripts/*.sh; do bash -n "$f" || { note "syntax $f" "FAIL"; fail=1; }; done
+syn=0
+for f in scripts/*.sh; do bash -n "$f" || { note "syntax $f" "FAIL"; syn=1; }; done
 for f in scripts/*.py charts/*.py; do
-  python3 -m py_compile "$f" 2>/dev/null || { note "syntax $f" "FAIL"; fail=1; }
+  python3 -m py_compile "$f" 2>/dev/null || { note "syntax $f" "FAIL"; syn=1; }
 done
 rm -rf scripts/__pycache__ charts/__pycache__
-note "script syntax" "ok"
+if [ "$syn" = 0 ]; then note "script syntax" "ok"; else fail=1; fi
 
 # 3. manifest and charts are regenerable and unchanged
 before=$(cat data/manifest.csv charts/*.svg | sha256sum)
-python3 scripts/build_manifest.py >/dev/null || { note "manifest" "FAIL"; fail=1; }
-python3 charts/make_charts.py >/dev/null || { note "charts" "FAIL"; fail=1; }
+gen=0
+python3 scripts/build_manifest.py >/dev/null || { note "manifest" "FAIL"; fail=1; gen=1; }
+python3 charts/make_charts.py >/dev/null || { note "charts" "FAIL"; fail=1; gen=1; }
 after=$(cat data/manifest.csv charts/*.svg | sha256sum)
-if [ "$before" = "$after" ]; then
+if [ "$gen" != 0 ]; then
+  note "manifest+charts" "not checked, generator failed"
+elif [ "$before" = "$after" ]; then
   note "manifest+charts" "ok, up to date"
 else
   note "manifest+charts" "REGENERATED - commit the change"

@@ -116,13 +116,15 @@ def chart_speculation_soak():
 def chart_output_stability():
     r = rows("aspm-under-load.jsonl")
     seen, bars = {}, []
+    short = {"default": "def", "performance": "perf", "powersave": "save"}
     for x in r:
         tag = x["tag"]
         pos = tag.rsplit("/", 1)[1]
         setting = tag.split("-")[1] + " " + tag.rsplit("/", 1)[0].split("-")[-1]
         h = x["sha1"]
         seen.setdefault(h, len(seen) + 1)
-        bars.append((f"{setting} {pos}", x["decode_tps"], f"#{seen[h]} {h[:6]}"))
+        mode, run = setting.split()
+        bars.append((f"{short[mode]} {run} {pos}", x["decode_tps"], f"#{seen[h]} {h[:4]}"))
     lo = min(b[1] for b in bars)
     hi = max(b[1] for b in bars)
     return bar_chart(
@@ -133,8 +135,7 @@ def chart_output_stability():
         "tokens/s per run, with the hash of the text that run produced",
         bars,
         [f"Source: data/aspm-under-load.jsonl. 12 runs, 3 ASPM settings, 2 passes, 272 W / -75 mV / 2200 MHz.",
-         f"Throughput spans {lo:.1f} to {hi:.1f} tok/s ({(hi/lo-1)*100:.1f}%), yet only {len(seen)} distinct output hashes occur,",
-         "one per request position: every first request matches every other first request, and likewise the second."])
+         f"Throughput spans {lo:.1f} to {hi:.1f} tok/s ({(hi/lo-1)*100:.1f}%), yet only {len(seen)} distinct output hashes occur."])
 
 
 def chart_soak_power():

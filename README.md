@@ -87,7 +87,7 @@ even to `0`.
 
 `turbo4` and `ngram-map-k` exist only in the fork this was built from;
 [docs/setup.md](docs/setup.md#which-results-depend-on-the-fork) separates the
-fork-dependent results from the ones that transfer anywhere.
+fork-dependent results from the ones that do not depend on the fork.
 
 ## Limitations
 
@@ -129,6 +129,6 @@ Measurements under `data/` are CC BY 4.0; see
 [data/LICENSE](data/LICENSE). The scripts are commented in Polish; `docs/` is
 the English account of what they do.
 
-Reproduction reports are the useful kind of contribution here, especially from a
-different card. What such a report needs to contain is in
-[CONTRIBUTING.md](CONTRIBUTING.md).
+Everything here remains one machine's measurements. If you reproduce any of it
+on another card, an issue is welcome; [CONTRIBUTING.md](CONTRIBUTING.md) says
+what makes such a report readable.

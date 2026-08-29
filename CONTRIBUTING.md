@@ -1,10 +1,11 @@
 # Contributing
 
-The most useful thing anyone can add is a reproduction on a different card.
-Everything here is one sample from one machine, which is the main thing limiting
-what it can claim.
+This repository publishes measurements from one machine. It is not a results
+database: reproductions are not collected in `data/` or aggregated with the
+measurements here.
 
-A reproduction report is worth reading if it states:
+If you run any of this on another card, an issue describing what you got is
+welcome. Such a report is easier to read if it states:
 
 - The card, vBIOS version, driver and Mesa version, and kernel.
 - The `llama.cpp` commit, whether it is upstream or a fork, and the cmake flags.

@@ -41,8 +41,10 @@ This distinction decides whether a given result transfers to your setup.
 | Power cap, undervolt, clock cap, ASPM results | not applicable, these are driver-level | |
 
 Anything measured with `turbo4` or `ngram-map-k` cannot be reproduced on
-upstream `llama.cpp`. The GPU power and stability results do not involve the
-fork at all and should transfer to any inference workload on this card.
+upstream `llama.cpp`. The power and stability results do not involve the fork,
+but they were measured with this model and workload on this card. A different
+workload may put the GPU at a different operating point, so treat the numbers as
+results for this setup rather than values that transfer unchanged.
 
 ## Model
 
