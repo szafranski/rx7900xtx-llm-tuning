@@ -57,6 +57,7 @@ EXPERIMENTS = {
     "kv-longctx-q8.json":          ("Three-task long-context set at 8K-120K, q8_0 V cache, two passes", "272 W, -75 mV, 2200 MHz", "kv_run_longctx.py"),
     "kv-longctx-turbo4.json":      ("Three-task long-context set at 8K-120K, turbo4 V cache, two passes", "272 W, -75 mV, 2200 MHz", "kv_run_longctx.py"),
     "kv-longctx-items.json":       ("Questions and answer keys for the long-context set", "n/a", "kv_gen_longctx.py"),
+    "kv-enumerate-turbo4.json":     ("Counting vs enumerating the same scattered entries, 64K and 120K, turbo4 V cache", "272 W, -75 mV, 2200 MHz", "kv_run_enumerate.py"),
     "kv-nexttoken-q8.json":        ("Next-token distributions at 8K-120K, q8_0 V cache, ctx 131072", "272 W, -75 mV, 2200 MHz", "kv_run_nexttoken.py"),
     "kv-nexttoken-turbo4.json":    ("Next-token distributions at 8K-120K, turbo4 V cache, ctx 131072", "272 W, -75 mV, 2200 MHz", "kv_run_nexttoken.py"),
     "kv-repeat-q8-64k.json":       ("Four recomputes of one 64K prompt, q8_0 V cache", "272 W, -75 mV, 2200 MHz", "kv_run_repeat.py"),

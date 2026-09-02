@@ -207,10 +207,12 @@ random, not derived from position, which was a defect of the needle matrix.
 
 At 120K, direct key retrieval held at 14 of 16 while two-hop retrieval fell to 6
 and counting reached 0. **Every counting error in both variants is an
-undercount, never an overcount**, so the failure is missed entries rather than
-guessing. The prompt asks for a bare number and reasoning was off, so there was
-no channel in which hesitation could have shown: all 88 wrong counts are a bare
-digit.
+undercount, never an overcount.** The follow-up test in the next section shows
+that this does not mean the entries were missed: asked to list them instead, the
+model usually names the complete set and still reports a smaller number. With
+reasoning off and a bare-number response format, a wrong count carries no
+visible intermediate step, so nothing about its mechanism can be read off the
+count alone.
 
 Eight unique items per type per length is a small sample and the reading should
 stay narrow: this is what these tasks did on this corpus, not a general
@@ -218,6 +220,57 @@ statement that 128K is usable for retrieval and unusable for aggregation. What
 it does establish is that a single needle-retrieval pass is the wrong instrument
 for the question. Retrieval is the part that survives; measuring only retrieval
 is how a long-context check reports 160/160 and tells you nothing.
+
+### Counting fails while enumeration mostly works
+
+The 0 of 16 above invites the reading that the entries were out of reach at
+120K. They were not. The same type C items were re-run asking two questions per
+item in the same session: first the phase-4 wording (`ile kluczy nalezy do
+partycji P` - how many keys belong to partition P), then a request to list them.
+One cache type (`turbo4`), 64K and 120K, two passes, eight items: 64 queries.
+Runner `scripts/kv_run_enumerate.py`, results
+`data/kv-enumerate-turbo4.json`. The answer keys were re-derived by regex from
+the frozen context files rather than taken from the generator's metadata, and
+the script aborts unless the two lengths yield identical key sets that also
+match the generator.
+
+| | 64K | 120K |
+|---|---:|---:|
+| count correct | 2/16 | 0/16 |
+| list complete | 11/16 | 10/16 |
+| keys recalled | 0.929 (65/70) | 0.914 (64/70) |
+| keys invented | 0 | 0 |
+| list complete **and** count wrong | 11/16 | 10/16 |
+| list incomplete and count wrong | 3/16 | 6/16 |
+
+At 120K the context held 70 keys across the eight items; the model named 64 of
+them and counted 52. Its count did not even match the length of its own list:
+`count == len(list)` in 3 of 16 at 64K and 6 of 16 at 120K, and at 120K the
+count was below its own list ten times and above it never. No key was invented
+in any of the 32 items. All 30 wrong counts undercount, by 1.12 keys on average
+at both lengths.
+
+The count accuracy came out 2/16 at 64K and 0/16 at 120K, which is exactly what
+type C scored in the matrix above, from a separate server start on a separate
+run. Repeat disagreement was 0 of 8 items for the count at both lengths, and 1
+of 8 at 64K and 0 of 8 at 120K for the list.
+
+Requesting the keys and counting them client-side is a strong mitigation where
+the returned list is complete: it would lift 2 of 32 correct counts to 21 of 32
+here. It is not a prompt-level fix for the limitation, because it leaves the 11
+incomplete lists untouched, and a recall of 0.91 is not 1.0 - some entries are
+genuinely lost. The honest summary is that on this corpus counting is wrong
+essentially always while enumeration loses about 9 percent of entries.
+
+What this does not establish: that the mechanism is general rather than specific
+to these items, that the cache type or the disabled reasoning has anything to do
+with it, that a list always rescues a count, or that eight items and two passes
+scale to a rate. One asymmetry is structural and worth naming: the list was
+always the second question of the pair. Each request is a standalone completion
+carrying no conversation history, and both questions read the same cached
+prefix, but the server runs `--spec-type draft-mtp,ngram-map-k` and its n-gram
+map does persist across requests, so the two positions in the pair are not
+provably equivalent. An arm with the list asked first would close that.
 
 ### The two cache types score the same
 

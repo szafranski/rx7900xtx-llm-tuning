@@ -137,6 +137,16 @@ sequence of context lengths that run used, and `ctx_sha256` the hash of each
 frozen context file, which is how the two variants are shown to have read
 identical input.
 
+`kv-enumerate-turbo4.json` holds the follow-up that asks each type C item twice,
+once for the count and once for the list. Each `runs` entry carries `part` (the
+partition asked about), `n_true`, `n_got` and `n_ok` for the count, then
+`l_found` (the keys the model listed), `l_hit` (how many of them are real),
+`l_extra` (invented keys), `l_count`, `l_ok` (list exactly correct), the two
+latencies, and the first 300 characters of the list reply. The `truth` block is
+the key set per partition as extracted from the frozen context files, not from
+the generator, which is what the script checks the generator against before it
+sends anything.
+
 `kv-longctx-items.json` holds the 24 questions with their answers and the
 generator's seed. The contexts themselves are reproducible from
 `../scripts/kv_gen_longctx.py` with that seed and are not committed.
