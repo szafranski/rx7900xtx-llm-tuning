@@ -107,7 +107,8 @@ you picked.
 A 160-cell needle matrix on `turbo4` (four lengths x five relative positions x
 eight keys, `data/kv-needles-turbo4.json`) scored 160/160. **That is a ceiling
 and it decides nothing.** We did not run it on `q8_0`, because a test that
-cannot fail cannot discriminate. Two further weaknesses, for anyone reusing
+cannot fail cannot discriminate. Its replacement, which does discriminate, is
+[the next section](#a-long-context-test-that-is-not-at-the-ceiling). Two further weaknesses, for anyone reusing
 `scripts/kv_run_needles.py`: the keys are a deterministic function of their
 position, so the answer is inferable from the scheme without finding the
 needle, and there are no near-miss distractor keys, so the task is lexical.
@@ -157,6 +158,99 @@ Prefill throughput falls with context on both: 694 tok/s at 8K, 311 tok/s at
   baseline at this context length, so both figures are relative.
 - The comparison detects differences larger than the run-to-run spread. It did
   not detect one, which is not the same as there being none.
+
+## A long-context test that is not at the ceiling
+
+The needle matrix above scored 160/160 and settled nothing. This is the replacement,
+run on both cache types at `--ctx-size 131072`. Generator
+`scripts/kv_gen_longctx.py`, runner `scripts/kv_run_longctx.py`, results in
+`data/kv-longctx-{q8,turbo4}.json`, questions and answers in
+`data/kv-longctx-items.json`.
+
+131 fact lines and 24 questions, **identical at every context length**; only the
+filler around them scales, so the single variable is how much context the facts
+are spread through. Every fact uses the same two sentence shapes, so no line
+stands out from the others:
+
+- **A, retrieval among near misses.** Name the partition of a given key. The
+  context also holds three keys differing from it by one character, each with a
+  different partition, so matching on appearance gives a confident wrong answer.
+- **B, two hops.** Key to partition in the first 30 percent of the context,
+  partition to node in the last 30 percent. Maps for the near-miss keys'
+  partitions are present too, so a slip on the first hop produces a plausible
+  node.
+- **C, aggregation.** Count 3 to 7 entries of one partition, scattered across the
+  whole context.
+
+Eight items per type, two passes, four lengths: 192 queries per variant. Keys are
+random, not derived from position, which was a defect of the needle matrix.
+
+### The window is not usable to the same degree for every task
+
+`turbo4`, correct out of 16 per cell:
+
+| task | 8K | 32K | 64K | 120K |
+|---|---:|---:|---:|---:|
+| A retrieval | 16 | 16 | 16 | 14 |
+| B two hops | 12 | 10 | 10 | 6 |
+| C aggregation | 10 | 8 | 2 | 0 |
+| total of 48 | 38 | 34 | 28 | 20 |
+
+`q8_0` on the same items: 40 / 32 / 28 / 20, and identical per type.
+
+At 120K, direct key retrieval held at 14 of 16 while two-hop retrieval fell to 6
+and counting reached 0. **Every counting error in both variants is an
+undercount, never an overcount**, so the failure is missed entries rather than
+guessing, and the model states the wrong count with no sign of difficulty.
+
+Eight unique items per type per length is a small sample and the reading should
+stay narrow: this is what these tasks did on this corpus, not a general
+statement that 128K is usable for retrieval and unusable for aggregation. What
+it does establish is that a single needle-retrieval pass is the wrong instrument
+for the question. Retrieval is the part that survives; measuring only retrieval
+is how a long-context check reports 160/160 and tells you nothing.
+
+### The two cache types score the same
+
+| | `q8_0` | `turbo4` |
+|---|---:|---:|
+| A | 62/64 | 62/64 |
+| B | 38/64 | 38/64 |
+| C | 20/64 | 20/64 |
+| total | 120/192 | 120/192 |
+
+Matched item by item, 7 of 192 answers differ between the variants. Six are type
+C off by one, one is a type B naming a different node, and they cancel: per
+length `q8_0` scored 40/32/28/20 against `turbo4`'s 38/34/28/20.
+
+The floor to read that against is the same variant answering the same item
+twice: `turbo4` disagreed with itself on 0 of 96 positions, `q8_0` on 1 of 96.
+So 7 of 192 is above the reproducibility floor - the cache type does change
+individual answers - and it is not a direction. On this benchmark `turbo4` shows
+no accuracy cost against `q8_0`.
+
+That the repeats are nearly deterministic is worth stating plainly, because it
+cuts both ways: it makes the floor tight, and it means the second pass is
+mostly a reproducibility check rather than independent evidence. The effective
+sample is closer to eight items per cell than sixteen.
+
+### Conditions, including the awkward ones
+
+- Both variants read byte-identical prompts, frozen to disk with SHA-256
+  recorded in each result file and verified equal across the two runs.
+- All items ran on a shared warm prompt prefix, one prefill per length. The
+  previous section shows cache reuse itself moves the distribution; the
+  condition is the same for both variants, but it is not a cold-cache result.
+- `enable_thinking: false` per request, while the shipped profile runs reasoning
+  on. These accuracies are not what the shipped profile would produce.
+- Run order was counterbalanced, `turbo4` ascending and `q8_0` descending. That
+  removes a shared drift but **confounds variant with order**: the two-point
+  crossovers at 8K and 32K could be order, item-level counting variation, or
+  noise, and this design cannot separate them. Reversing the order produced no
+  systematic advantage either way, which is all that can be said.
+- One card, one model, one build, one generated corpus. The test can only detect
+  a difference larger than its own resolution, and eight unique items per cell
+  is a coarse resolution. It did not find one.
 
 ## The quality gate hit its ceiling
 

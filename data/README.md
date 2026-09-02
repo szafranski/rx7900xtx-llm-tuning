@@ -120,3 +120,22 @@ had `RADV_PERFTEST=nogttspill` set, under which an over-allocation fails instead
 of falling back to host memory. Prefill throughput does drop with context
 (694 tok/s at 8K to 311 tok/s at 120K), equally in both variants, which is
 attention cost rather than a memory-path change.
+
+## Long-context task files
+
+`kv-longctx-{q8,turbo4}.json` hold the three-task long-context set described in
+[../docs/context-and-quality.md](../docs/context-and-quality.md#a-long-context-test-that-is-not-at-the-ceiling).
+Each `runs` entry is one query: `len`, `rep` (pass 0 or 1), `i` (item index into
+`kv-longctx-items.json`), `typ` (A, B or C), `exp` and `got` (expected and
+extracted answer), `ok`, `dt`, the first 120 characters of the raw reply, and
+`cached`, the server's `cached_tokens` for that request. `order` records the
+sequence of context lengths that run used, and `ctx_sha256` the hash of each
+frozen context file, which is how the two variants are shown to have read
+identical input.
+
+`kv-longctx-items.json` holds the 24 questions with their answers and the
+generator's seed. The contexts themselves are reproducible from
+`../scripts/kv_gen_longctx.py` with that seed and are not committed.
+
+Scoring is a regex per task type in `../scripts/kv_run_longctx.py`: two digits
+for A, `WEZEL-NNN` for B, an integer for C, taking the first match in the reply.

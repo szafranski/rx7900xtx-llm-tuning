@@ -1,0 +1,149 @@
+{
+ "seed": 20260902,
+ "n_per_type": 8,
+ "n_facts": 131,
+ "items": [
+  [
+   "A",
+   "Do ktorej partycji nalezy klucz 8JWS-TNUZ? Odpowiedz wylacznie dwucyfrowa liczba, bez zadnego innego tekstu.",
+   "95"
+  ],
+  [
+   "A",
+   "Do ktorej partycji nalezy klucz VTS9-PQHZ? Odpowiedz wylacznie dwucyfrowa liczba, bez zadnego innego tekstu.",
+   "38"
+  ],
+  [
+   "A",
+   "Do ktorej partycji nalezy klucz GQC9-TD9D? Odpowiedz wylacznie dwucyfrowa liczba, bez zadnego innego tekstu.",
+   "43"
+  ],
+  [
+   "A",
+   "Do ktorej partycji nalezy klucz 4SSS-VVEA? Odpowiedz wylacznie dwucyfrowa liczba, bez zadnego innego tekstu.",
+   "80"
+  ],
+  [
+   "A",
+   "Do ktorej partycji nalezy klucz 95JE-JKNC? Odpowiedz wylacznie dwucyfrowa liczba, bez zadnego innego tekstu.",
+   "66"
+  ],
+  [
+   "A",
+   "Do ktorej partycji nalezy klucz MHC3-NR7H? Odpowiedz wylacznie dwucyfrowa liczba, bez zadnego innego tekstu.",
+   "71"
+  ],
+  [
+   "A",
+   "Do ktorej partycji nalezy klucz BQS9-FEBE? Odpowiedz wylacznie dwucyfrowa liczba, bez zadnego innego tekstu.",
+   "90"
+  ],
+  [
+   "A",
+   "Do ktorej partycji nalezy klucz EQDT-5EQB? Odpowiedz wylacznie dwucyfrowa liczba, bez zadnego innego tekstu.",
+   "11"
+  ],
+  [
+   "B",
+   "Ktory wezel obsluguje klucz V7K8-QPF7? Odpowiedz wylacznie w formacie WEZEL-NNN, bez zadnego innego tekstu.",
+   "WEZEL-731"
+  ],
+  [
+   "B",
+   "Ktory wezel obsluguje klucz KHY3-7QSS? Odpowiedz wylacznie w formacie WEZEL-NNN, bez zadnego innego tekstu.",
+   "WEZEL-165"
+  ],
+  [
+   "B",
+   "Ktory wezel obsluguje klucz S79Q-GTC4? Odpowiedz wylacznie w formacie WEZEL-NNN, bez zadnego innego tekstu.",
+   "WEZEL-939"
+  ],
+  [
+   "B",
+   "Ktory wezel obsluguje klucz NNX8-GVJD? Odpowiedz wylacznie w formacie WEZEL-NNN, bez zadnego innego tekstu.",
+   "WEZEL-177"
+  ],
+  [
+   "B",
+   "Ktory wezel obsluguje klucz PTTS-9UKE? Odpowiedz wylacznie w formacie WEZEL-NNN, bez zadnego innego tekstu.",
+   "WEZEL-713"
+  ],
+  [
+   "B",
+   "Ktory wezel obsluguje klucz P7NB-WCVU? Odpowiedz wylacznie w formacie WEZEL-NNN, bez zadnego innego tekstu.",
+   "WEZEL-714"
+  ],
+  [
+   "B",
+   "Ktory wezel obsluguje klucz P2N7-QGY4? Odpowiedz wylacznie w formacie WEZEL-NNN, bez zadnego innego tekstu.",
+   "WEZEL-866"
+  ],
+  [
+   "B",
+   "Ktory wezel obsluguje klucz 299A-TGCJ? Odpowiedz wylacznie w formacie WEZEL-NNN, bez zadnego innego tekstu.",
+   "WEZEL-320"
+  ],
+  [
+   "C",
+   "Ile kluczy nalezy do partycji 53? Odpowiedz wylacznie liczba, bez zadnego innego tekstu.",
+   "5"
+  ],
+  [
+   "C",
+   "Ile kluczy nalezy do partycji 58? Odpowiedz wylacznie liczba, bez zadnego innego tekstu.",
+   "3"
+  ],
+  [
+   "C",
+   "Ile kluczy nalezy do partycji 83? Odpowiedz wylacznie liczba, bez zadnego innego tekstu.",
+   "4"
+  ],
+  [
+   "C",
+   "Ile kluczy nalezy do partycji 14? Odpowiedz wylacznie liczba, bez zadnego innego tekstu.",
+   "4"
+  ],
+  [
+   "C",
+   "Ile kluczy nalezy do partycji 18? Odpowiedz wylacznie liczba, bez zadnego innego tekstu.",
+   "3"
+  ],
+  [
+   "C",
+   "Ile kluczy nalezy do partycji 23? Odpowiedz wylacznie liczba, bez zadnego innego tekstu.",
+   "5"
+  ],
+  [
+   "C",
+   "Ile kluczy nalezy do partycji 77? Odpowiedz wylacznie liczba, bez zadnego innego tekstu.",
+   "7"
+  ],
+  [
+   "C",
+   "Ile kluczy nalezy do partycji 31? Odpowiedz wylacznie liczba, bez zadnego innego tekstu.",
+   "4"
+  ]
+ ],
+ "ctx": {
+  "8k": {
+   "paras": 55,
+   "tokens": 7910,
+   "chars": 22245
+  },
+  "32k": {
+   "paras": 308,
+   "tokens": 31985,
+   "chars": 95318
+  },
+  "64k": {
+   "paras": 643,
+   "tokens": 63922,
+   "chars": 192133
+  },
+  "120k": {
+   "paras": 1228,
+   "tokens": 119921,
+   "chars": 361427
+  }
+ }
+}
