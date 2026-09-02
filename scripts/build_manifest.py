@@ -53,6 +53,13 @@ EXPERIMENTS = {
     "multiturn-contents.jsonl":    ("Per-turn output of the multi-turn session", "272 W, -75 mV, 2200 MHz", "bench-multiturn.sh"),
     "energy-early.jsonl":          ("Early energy measurements, before the profile was fixed", "varied", "bench-energy-early.sh"),
     "energy-early-soak.jsonl":     ("Early soak, before the profile was fixed", "varied", "bench-energy-early.sh"),
+    "kv-nexttoken-q8.json":        ("Next-token distributions at 8K-120K, q8_0 V cache, ctx 131072", "272 W, -75 mV, 2200 MHz", "kv_run_nexttoken.py"),
+    "kv-nexttoken-turbo4.json":    ("Next-token distributions at 8K-120K, turbo4 V cache, ctx 131072", "272 W, -75 mV, 2200 MHz", "kv_run_nexttoken.py"),
+    "kv-repeat-q8-64k.json":       ("Four recomputes of one 64K prompt, q8_0 V cache", "272 W, -75 mV, 2200 MHz", "kv_run_repeat.py"),
+    "kv-repeat-turbo4-64k.json":   ("Four recomputes of one 64K prompt, turbo4 V cache", "272 W, -75 mV, 2200 MHz", "kv_run_repeat.py"),
+    "kv-needles-turbo4.json":      ("160-cell needle matrix, turbo4 V cache, ceiling result", "272 W, -75 mV, 2200 MHz", "kv_run_needles.py"),
+    "kv-vision-q8.json":           ("Three image tasks, q8_0 V cache, ctx 131072", "272 W, -75 mV, 2200 MHz", "kv_run_vision.py"),
+    "kv-vision-turbo4.json":       ("Three image tasks, turbo4 V cache, ctx 131072", "272 W, -75 mV, 2200 MHz", "kv_run_vision.py"),
     "spec-mtp-early.jsonl":        ("First MTP measurements", "303 W, 0 mV", "bench-context-32k.sh"),
 }
 

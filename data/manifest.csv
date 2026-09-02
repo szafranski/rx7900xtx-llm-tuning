@@ -13,6 +13,13 @@ energy-early-soak.jsonl,"Early soak, before the profile was fixed",varied,bench-
 energy-early.jsonl,"Early energy measurements, before the profile was fixed",varied,bench-energy-early.sh,11,9352,1d8938a683a80490d5885fdc2a744a644c26e969a1a49285c96bba40e6adc738
 idle-power.jsonl,Idle GPU power baseline,factory and capped,bench-idle.sh,10,4805,db5617bc4467f165c5e0cda557df2d04fd68862786ee18f2d151059da7ccb929
 idle-with-projector.jsonl,Idle power with the vision projector loaded,"272 W, -75 mV, 2200 MHz",bench-idle-projector.sh,6,2860,76d1be3110037355ff626b3c0804694aa7e3b996ec65dd3c8227c4799d9a7764
+kv-needles-turbo4.json,"160-cell needle matrix, turbo4 V cache, ceiling result","272 W, -75 mV, 2200 MHz",kv_run_needles.py,4,20436,fe0a420d8c6e78052324a86e24754b0d02e27f97222591c6eda35b17f9a62ab4
+kv-nexttoken-q8.json,"Next-token distributions at 8K-120K, q8_0 V cache, ctx 131072","272 W, -75 mV, 2200 MHz",kv_run_nexttoken.py,7,14516,ed99d5933685d742fbc7676250ac1525fdc0e5939fd528eabe6b234d47af336d
+kv-nexttoken-turbo4.json,"Next-token distributions at 8K-120K, turbo4 V cache, ctx 131072","272 W, -75 mV, 2200 MHz",kv_run_nexttoken.py,7,14556,c7b737a3771a587606a4ab6c055f6ba2e0941a8828e05bbd21ac3c5eb8ff4bd4
+kv-repeat-q8-64k.json,"Four recomputes of one 64K prompt, q8_0 V cache","272 W, -75 mV, 2200 MHz",kv_run_repeat.py,3,5479,20a8a8a3eb0267a32ace8499c2e88173bffb63b5defe32eee5af2c9eb2b1e053
+kv-repeat-turbo4-64k.json,"Four recomputes of one 64K prompt, turbo4 V cache","272 W, -75 mV, 2200 MHz",kv_run_repeat.py,3,5524,447b43a05a9bdf81298f731576c9bf7d0281ba8a5e34d53de47ee890bf7a9e94
+kv-vision-q8.json,"Three image tasks, q8_0 V cache, ctx 131072","272 W, -75 mV, 2200 MHz",kv_run_vision.py,4,543,d475aad6c284684a8e4d2313fae8e146cd04b7f64c87a3569ce261d62cc01c5a
+kv-vision-turbo4.json,"Three image tasks, turbo4 V cache, ctx 131072","272 W, -75 mV, 2200 MHz",kv_run_vision.py,4,547,028159ecaaa718405517f12b7b7c91f1545fd4ef09d68cce8fe5c4d99b873ce5
 multiturn-contents.jsonl,Per-turn output of the multi-turn session,"272 W, -75 mV, 2200 MHz",bench-multiturn.sh,3,8358,6be3f1b1fcced82b26b9afe5bc4d13c22da9185ef834639b6c63723627e7f990
 multiturn-session.jsonl,"Ten-turn session, replayed transcript","272 W, -75 mV, 2200 MHz",bench-multiturn.sh,17,47821,da0fed2aeb9823627e35c59ac052380c424ea0969d9eb2c50e7548157476af04
 perplexity-chunks.txt,"Per-chunk perplexity, wikitext-2 test split",factory,bench-idle.sh,616,6188,031372c19798b9f219aebd13ed4b5a3fc546f4a0ca11c8f8eedca73769f3ce10

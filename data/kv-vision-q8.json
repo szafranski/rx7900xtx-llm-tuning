@@ -1,0 +1,34 @@
+{
+ "variant": "q8",
+ "t_start": "17:16:55",
+ "cases": [
+  {
+   "img": "t1.png",
+   "key": "KOD-7731-OMEGA",
+   "ok": true,
+   "dt": 2.61,
+   "sha1": "04c84443f798",
+   "content": "KOD-7731-OMEGA",
+   "md5img": "c2485b26"
+  },
+  {
+   "img": "t2.png",
+   "key": "47",
+   "ok": true,
+   "dt": 4.08,
+   "sha1": "0ff0beb4cb66",
+   "content": "47",
+   "md5img": "64b74845"
+  },
+  {
+   "img": "t3.png",
+   "key": "13",
+   "ok": true,
+   "dt": 3.78,
+   "sha1": "87a71b063eee",
+   "content": "13",
+   "md5img": "5b2c557c"
+  }
+ ],
+ "t_end": "17:17:06"
+}

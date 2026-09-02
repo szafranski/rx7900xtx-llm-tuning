@@ -88,6 +88,13 @@ These limits are part of the result, not disclaimers appended to it.
   configurations listed, with this build.
 - **Perplexity unchanged to four decimals bounds gross regression only.** It
   does not detect a small quality change.
+- **Equal text hashes can hide an unequal distribution, by an amount that
+  depends on the KV cache type.** Four recomputes of one 64K prompt returned the
+  same token every time while the next-token distribution moved by up to 0.0017
+  with a `q8_0` V cache and up to 0.0144 with `turbo4`, same metric, same
+  machine. The gate is a test of the decoded text and is only as sensitive as
+  that text is; see
+  [context-and-quality.md](context-and-quality.md#a-closer-look-at-turbo4-against-q8_0-at-128k).
 
 ## Reusing the gate
 

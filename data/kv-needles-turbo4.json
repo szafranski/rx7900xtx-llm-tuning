@@ -1,0 +1,1287 @@
+{
+ "variant": "turbo4",
+ "t_start": "16:53:10",
+ "cells": [
+  {
+   "len": "8k",
+   "pos": 0.1,
+   "key": "KOD-1100-ALFA1",
+   "ok": true,
+   "dt": 12.85,
+   "ans": "KOD-1100-ALFA1"
+  },
+  {
+   "len": "8k",
+   "pos": 0.1,
+   "key": "KOD-1201-BETA1",
+   "ok": true,
+   "dt": 2.01,
+   "ans": "KOD-1201-BETA1"
+  },
+  {
+   "len": "8k",
+   "pos": 0.1,
+   "key": "KOD-1302-GAMMA1",
+   "ok": true,
+   "dt": 1.98,
+   "ans": "KOD-1302-GAMMA1"
+  },
+  {
+   "len": "8k",
+   "pos": 0.1,
+   "key": "KOD-1403-DELTA1",
+   "ok": true,
+   "dt": 1.98,
+   "ans": "KOD-1403-DELTA1"
+  },
+  {
+   "len": "8k",
+   "pos": 0.1,
+   "key": "KOD-1504-EPSILON1",
+   "ok": true,
+   "dt": 1.98,
+   "ans": "KOD-1504-EPSILON1"
+  },
+  {
+   "len": "8k",
+   "pos": 0.1,
+   "key": "KOD-1605-ZETA1",
+   "ok": true,
+   "dt": 1.98,
+   "ans": "KOD-1605-ZETA1"
+  },
+  {
+   "len": "8k",
+   "pos": 0.1,
+   "key": "KOD-1706-ETA1",
+   "ok": true,
+   "dt": 1.99,
+   "ans": "KOD-1706-ETA1"
+  },
+  {
+   "len": "8k",
+   "pos": 0.1,
+   "key": "KOD-1807-THETA1",
+   "ok": true,
+   "dt": 1.99,
+   "ans": "KOD-1807-THETA1"
+  },
+  {
+   "len": "8k",
+   "pos": 0.3,
+   "key": "KOD-2108-ALFA2",
+   "ok": true,
+   "dt": 1.99,
+   "ans": "KOD-2108-ALFA2"
+  },
+  {
+   "len": "8k",
+   "pos": 0.3,
+   "key": "KOD-2209-BETA2",
+   "ok": true,
+   "dt": 1.99,
+   "ans": "KOD-2209-BETA2"
+  },
+  {
+   "len": "8k",
+   "pos": 0.3,
+   "key": "KOD-2310-GAMMA2",
+   "ok": true,
+   "dt": 1.99,
+   "ans": "KOD-2310-GAMMA2"
+  },
+  {
+   "len": "8k",
+   "pos": 0.3,
+   "key": "KOD-2411-DELTA2",
+   "ok": true,
+   "dt": 1.97,
+   "ans": "KOD-2411-DELTA2"
+  },
+  {
+   "len": "8k",
+   "pos": 0.3,
+   "key": "KOD-2512-EPSILON2",
+   "ok": true,
+   "dt": 1.99,
+   "ans": "KOD-2512-EPSILON2"
+  },
+  {
+   "len": "8k",
+   "pos": 0.3,
+   "key": "KOD-2613-ZETA2",
+   "ok": true,
+   "dt": 1.99,
+   "ans": "KOD-2613-ZETA2"
+  },
+  {
+   "len": "8k",
+   "pos": 0.3,
+   "key": "KOD-2714-ETA2",
+   "ok": true,
+   "dt": 2.0,
+   "ans": "KOD-2714-ETA2"
+  },
+  {
+   "len": "8k",
+   "pos": 0.3,
+   "key": "KOD-2815-THETA2",
+   "ok": true,
+   "dt": 1.99,
+   "ans": "KOD-2815-THETA2"
+  },
+  {
+   "len": "8k",
+   "pos": 0.5,
+   "key": "KOD-3116-ALFA3",
+   "ok": true,
+   "dt": 2.0,
+   "ans": "KOD-3116-ALFA3"
+  },
+  {
+   "len": "8k",
+   "pos": 0.5,
+   "key": "KOD-3217-BETA3",
+   "ok": true,
+   "dt": 1.99,
+   "ans": "KOD-3217-BETA3"
+  },
+  {
+   "len": "8k",
+   "pos": 0.5,
+   "key": "KOD-3318-GAMMA3",
+   "ok": true,
+   "dt": 1.99,
+   "ans": "KOD-3318-GAMMA3"
+  },
+  {
+   "len": "8k",
+   "pos": 0.5,
+   "key": "KOD-3419-DELTA3",
+   "ok": true,
+   "dt": 1.99,
+   "ans": "KOD-3419-DELTA3"
+  },
+  {
+   "len": "8k",
+   "pos": 0.5,
+   "key": "KOD-3520-EPSILON3",
+   "ok": true,
+   "dt": 1.99,
+   "ans": "KOD-3520-EPSILON3"
+  },
+  {
+   "len": "8k",
+   "pos": 0.5,
+   "key": "KOD-3621-ZETA3",
+   "ok": true,
+   "dt": 1.99,
+   "ans": "KOD-3621-ZETA3"
+  },
+  {
+   "len": "8k",
+   "pos": 0.5,
+   "key": "KOD-3722-ETA3",
+   "ok": true,
+   "dt": 1.99,
+   "ans": "KOD-3722-ETA3"
+  },
+  {
+   "len": "8k",
+   "pos": 0.5,
+   "key": "KOD-3823-THETA3",
+   "ok": true,
+   "dt": 2.0,
+   "ans": "KOD-3823-THETA3"
+  },
+  {
+   "len": "8k",
+   "pos": 0.7,
+   "key": "KOD-4124-ALFA4",
+   "ok": true,
+   "dt": 1.98,
+   "ans": "KOD-4124-ALFA4"
+  },
+  {
+   "len": "8k",
+   "pos": 0.7,
+   "key": "KOD-4225-BETA4",
+   "ok": true,
+   "dt": 1.98,
+   "ans": "KOD-4225-BETA4"
+  },
+  {
+   "len": "8k",
+   "pos": 0.7,
+   "key": "KOD-4326-GAMMA4",
+   "ok": true,
+   "dt": 1.98,
+   "ans": "KOD-4326-GAMMA4"
+  },
+  {
+   "len": "8k",
+   "pos": 0.7,
+   "key": "KOD-4427-DELTA4",
+   "ok": true,
+   "dt": 1.98,
+   "ans": "KOD-4427-DELTA4"
+  },
+  {
+   "len": "8k",
+   "pos": 0.7,
+   "key": "KOD-4528-EPSILON4",
+   "ok": true,
+   "dt": 1.98,
+   "ans": "KOD-4528-EPSILON4"
+  },
+  {
+   "len": "8k",
+   "pos": 0.7,
+   "key": "KOD-4629-ZETA4",
+   "ok": true,
+   "dt": 1.98,
+   "ans": "KOD-4629-ZETA4"
+  },
+  {
+   "len": "8k",
+   "pos": 0.7,
+   "key": "KOD-4730-ETA4",
+   "ok": true,
+   "dt": 1.98,
+   "ans": "KOD-4730-ETA4"
+  },
+  {
+   "len": "8k",
+   "pos": 0.7,
+   "key": "KOD-4831-THETA4",
+   "ok": true,
+   "dt": 1.99,
+   "ans": "KOD-4831-THETA4"
+  },
+  {
+   "len": "8k",
+   "pos": 0.9,
+   "key": "KOD-5132-ALFA5",
+   "ok": true,
+   "dt": 1.98,
+   "ans": "KOD-5132-ALFA5"
+  },
+  {
+   "len": "8k",
+   "pos": 0.9,
+   "key": "KOD-5233-BETA5",
+   "ok": true,
+   "dt": 1.99,
+   "ans": "KOD-5233-BETA5"
+  },
+  {
+   "len": "8k",
+   "pos": 0.9,
+   "key": "KOD-5334-GAMMA5",
+   "ok": true,
+   "dt": 1.98,
+   "ans": "KOD-5334-GAMMA5"
+  },
+  {
+   "len": "8k",
+   "pos": 0.9,
+   "key": "KOD-5435-DELTA5",
+   "ok": true,
+   "dt": 2.01,
+   "ans": "KOD-5435-DELTA5"
+  },
+  {
+   "len": "8k",
+   "pos": 0.9,
+   "key": "KOD-5536-EPSILON5",
+   "ok": true,
+   "dt": 2.01,
+   "ans": "KOD-5536-EPSILON5"
+  },
+  {
+   "len": "8k",
+   "pos": 0.9,
+   "key": "KOD-5637-ZETA5",
+   "ok": true,
+   "dt": 1.98,
+   "ans": "KOD-5637-ZETA5"
+  },
+  {
+   "len": "8k",
+   "pos": 0.9,
+   "key": "KOD-5738-ETA5",
+   "ok": true,
+   "dt": 1.98,
+   "ans": "KOD-5738-ETA5"
+  },
+  {
+   "len": "8k",
+   "pos": 0.9,
+   "key": "KOD-5839-THETA5",
+   "ok": true,
+   "dt": 1.99,
+   "ans": "KOD-5839-THETA5"
+  },
+  {
+   "len": "32k",
+   "pos": 0.1,
+   "key": "KOD-1100-ALFA1",
+   "ok": true,
+   "dt": 59.49,
+   "ans": "KOD-1100-ALFA1"
+  },
+  {
+   "len": "32k",
+   "pos": 0.1,
+   "key": "KOD-1201-BETA1",
+   "ok": true,
+   "dt": 3.03,
+   "ans": "KOD-1201-BETA1"
+  },
+  {
+   "len": "32k",
+   "pos": 0.1,
+   "key": "KOD-1302-GAMMA1",
+   "ok": true,
+   "dt": 2.94,
+   "ans": "KOD-1302-GAMMA1"
+  },
+  {
+   "len": "32k",
+   "pos": 0.1,
+   "key": "KOD-1403-DELTA1",
+   "ok": true,
+   "dt": 2.94,
+   "ans": "KOD-1403-DELTA1"
+  },
+  {
+   "len": "32k",
+   "pos": 0.1,
+   "key": "KOD-1504-EPSILON1",
+   "ok": true,
+   "dt": 2.91,
+   "ans": "KOD-1504-EPSILON1"
+  },
+  {
+   "len": "32k",
+   "pos": 0.1,
+   "key": "KOD-1605-ZETA1",
+   "ok": true,
+   "dt": 3.05,
+   "ans": "KOD-1605-ZETA1"
+  },
+  {
+   "len": "32k",
+   "pos": 0.1,
+   "key": "KOD-1706-ETA1",
+   "ok": true,
+   "dt": 2.91,
+   "ans": "KOD-1706-ETA1"
+  },
+  {
+   "len": "32k",
+   "pos": 0.1,
+   "key": "KOD-1807-THETA1",
+   "ok": true,
+   "dt": 3.01,
+   "ans": "KOD-1807-THETA1"
+  },
+  {
+   "len": "32k",
+   "pos": 0.3,
+   "key": "KOD-2108-ALFA2",
+   "ok": true,
+   "dt": 2.95,
+   "ans": "KOD-2108-ALFA2"
+  },
+  {
+   "len": "32k",
+   "pos": 0.3,
+   "key": "KOD-2209-BETA2",
+   "ok": true,
+   "dt": 2.91,
+   "ans": "KOD-2209-BETA2"
+  },
+  {
+   "len": "32k",
+   "pos": 0.3,
+   "key": "KOD-2310-GAMMA2",
+   "ok": true,
+   "dt": 2.95,
+   "ans": "KOD-2310-GAMMA2"
+  },
+  {
+   "len": "32k",
+   "pos": 0.3,
+   "key": "KOD-2411-DELTA2",
+   "ok": true,
+   "dt": 2.95,
+   "ans": "KOD-2411-DELTA2"
+  },
+  {
+   "len": "32k",
+   "pos": 0.3,
+   "key": "KOD-2512-EPSILON2",
+   "ok": true,
+   "dt": 2.92,
+   "ans": "KOD-2512-EPSILON2"
+  },
+  {
+   "len": "32k",
+   "pos": 0.3,
+   "key": "KOD-2613-ZETA2",
+   "ok": true,
+   "dt": 3.0,
+   "ans": "KOD-2613-ZETA2"
+  },
+  {
+   "len": "32k",
+   "pos": 0.3,
+   "key": "KOD-2714-ETA2",
+   "ok": true,
+   "dt": 2.97,
+   "ans": "KOD-2714-ETA2"
+  },
+  {
+   "len": "32k",
+   "pos": 0.3,
+   "key": "KOD-2815-THETA2",
+   "ok": true,
+   "dt": 2.93,
+   "ans": "KOD-2815-THETA2"
+  },
+  {
+   "len": "32k",
+   "pos": 0.5,
+   "key": "KOD-3116-ALFA3",
+   "ok": true,
+   "dt": 3.03,
+   "ans": "KOD-3116-ALFA3"
+  },
+  {
+   "len": "32k",
+   "pos": 0.5,
+   "key": "KOD-3217-BETA3",
+   "ok": true,
+   "dt": 3.0,
+   "ans": "KOD-3217-BETA3"
+  },
+  {
+   "len": "32k",
+   "pos": 0.5,
+   "key": "KOD-3318-GAMMA3",
+   "ok": true,
+   "dt": 2.88,
+   "ans": "KOD-3318-GAMMA3"
+  },
+  {
+   "len": "32k",
+   "pos": 0.5,
+   "key": "KOD-3419-DELTA3",
+   "ok": true,
+   "dt": 2.94,
+   "ans": "KOD-3419-DELTA3"
+  },
+  {
+   "len": "32k",
+   "pos": 0.5,
+   "key": "KOD-3520-EPSILON3",
+   "ok": true,
+   "dt": 2.94,
+   "ans": "KOD-3520-EPSILON3"
+  },
+  {
+   "len": "32k",
+   "pos": 0.5,
+   "key": "KOD-3621-ZETA3",
+   "ok": true,
+   "dt": 2.94,
+   "ans": "KOD-3621-ZETA3"
+  },
+  {
+   "len": "32k",
+   "pos": 0.5,
+   "key": "KOD-3722-ETA3",
+   "ok": true,
+   "dt": 2.97,
+   "ans": "KOD-3722-ETA3"
+  },
+  {
+   "len": "32k",
+   "pos": 0.5,
+   "key": "KOD-3823-THETA3",
+   "ok": true,
+   "dt": 2.91,
+   "ans": "KOD-3823-THETA3"
+  },
+  {
+   "len": "32k",
+   "pos": 0.7,
+   "key": "KOD-4124-ALFA4",
+   "ok": true,
+   "dt": 2.9,
+   "ans": "KOD-4124-ALFA4"
+  },
+  {
+   "len": "32k",
+   "pos": 0.7,
+   "key": "KOD-4225-BETA4",
+   "ok": true,
+   "dt": 2.94,
+   "ans": "KOD-4225-BETA4"
+  },
+  {
+   "len": "32k",
+   "pos": 0.7,
+   "key": "KOD-4326-GAMMA4",
+   "ok": true,
+   "dt": 2.88,
+   "ans": "KOD-4326-GAMMA4"
+  },
+  {
+   "len": "32k",
+   "pos": 0.7,
+   "key": "KOD-4427-DELTA4",
+   "ok": true,
+   "dt": 2.94,
+   "ans": "KOD-4427-DELTA4"
+  },
+  {
+   "len": "32k",
+   "pos": 0.7,
+   "key": "KOD-4528-EPSILON4",
+   "ok": true,
+   "dt": 2.96,
+   "ans": "KOD-4528-EPSILON4"
+  },
+  {
+   "len": "32k",
+   "pos": 0.7,
+   "key": "KOD-4629-ZETA4",
+   "ok": true,
+   "dt": 2.95,
+   "ans": "KOD-4629-ZETA4"
+  },
+  {
+   "len": "32k",
+   "pos": 0.7,
+   "key": "KOD-4730-ETA4",
+   "ok": true,
+   "dt": 2.95,
+   "ans": "KOD-4730-ETA4"
+  },
+  {
+   "len": "32k",
+   "pos": 0.7,
+   "key": "KOD-4831-THETA4",
+   "ok": true,
+   "dt": 3.0,
+   "ans": "KOD-4831-THETA4"
+  },
+  {
+   "len": "32k",
+   "pos": 0.9,
+   "key": "KOD-5132-ALFA5",
+   "ok": true,
+   "dt": 2.93,
+   "ans": "KOD-5132-ALFA5"
+  },
+  {
+   "len": "32k",
+   "pos": 0.9,
+   "key": "KOD-5233-BETA5",
+   "ok": true,
+   "dt": 2.99,
+   "ans": "KOD-5233-BETA5"
+  },
+  {
+   "len": "32k",
+   "pos": 0.9,
+   "key": "KOD-5334-GAMMA5",
+   "ok": true,
+   "dt": 3.03,
+   "ans": "KOD-5334-GAMMA5"
+  },
+  {
+   "len": "32k",
+   "pos": 0.9,
+   "key": "KOD-5435-DELTA5",
+   "ok": true,
+   "dt": 2.97,
+   "ans": "KOD-5435-DELTA5"
+  },
+  {
+   "len": "32k",
+   "pos": 0.9,
+   "key": "KOD-5536-EPSILON5",
+   "ok": true,
+   "dt": 2.97,
+   "ans": "KOD-5536-EPSILON5"
+  },
+  {
+   "len": "32k",
+   "pos": 0.9,
+   "key": "KOD-5637-ZETA5",
+   "ok": true,
+   "dt": 3.07,
+   "ans": "KOD-5637-ZETA5"
+  },
+  {
+   "len": "32k",
+   "pos": 0.9,
+   "key": "KOD-5738-ETA5",
+   "ok": true,
+   "dt": 3.02,
+   "ans": "KOD-5738-ETA5"
+  },
+  {
+   "len": "32k",
+   "pos": 0.9,
+   "key": "KOD-5839-THETA5",
+   "ok": true,
+   "dt": 2.93,
+   "ans": "KOD-5839-THETA5"
+  },
+  {
+   "len": "64k",
+   "pos": 0.1,
+   "key": "KOD-1100-ALFA1",
+   "ok": true,
+   "dt": 153.59,
+   "ans": "KOD-1100-ALFA1"
+  },
+  {
+   "len": "64k",
+   "pos": 0.1,
+   "key": "KOD-1201-BETA1",
+   "ok": true,
+   "dt": 4.14,
+   "ans": "KOD-1201-BETA1"
+  },
+  {
+   "len": "64k",
+   "pos": 0.1,
+   "key": "KOD-1302-GAMMA1",
+   "ok": true,
+   "dt": 4.15,
+   "ans": "KOD-1302-GAMMA1"
+  },
+  {
+   "len": "64k",
+   "pos": 0.1,
+   "key": "KOD-1403-DELTA1",
+   "ok": true,
+   "dt": 4.17,
+   "ans": "KOD-1403-DELTA1"
+  },
+  {
+   "len": "64k",
+   "pos": 0.1,
+   "key": "KOD-1504-EPSILON1",
+   "ok": true,
+   "dt": 4.19,
+   "ans": "KOD-1504-EPSILON1"
+  },
+  {
+   "len": "64k",
+   "pos": 0.1,
+   "key": "KOD-1605-ZETA1",
+   "ok": true,
+   "dt": 4.16,
+   "ans": "KOD-1605-ZETA1"
+  },
+  {
+   "len": "64k",
+   "pos": 0.1,
+   "key": "KOD-1706-ETA1",
+   "ok": true,
+   "dt": 4.17,
+   "ans": "KOD-1706-ETA1"
+  },
+  {
+   "len": "64k",
+   "pos": 0.1,
+   "key": "KOD-1807-THETA1",
+   "ok": true,
+   "dt": 4.16,
+   "ans": "KOD-1807-THETA1"
+  },
+  {
+   "len": "64k",
+   "pos": 0.3,
+   "key": "KOD-2108-ALFA2",
+   "ok": true,
+   "dt": 4.2,
+   "ans": "KOD-2108-ALFA2"
+  },
+  {
+   "len": "64k",
+   "pos": 0.3,
+   "key": "KOD-2209-BETA2",
+   "ok": true,
+   "dt": 4.18,
+   "ans": "KOD-2209-BETA2"
+  },
+  {
+   "len": "64k",
+   "pos": 0.3,
+   "key": "KOD-2310-GAMMA2",
+   "ok": true,
+   "dt": 4.15,
+   "ans": "KOD-2310-GAMMA2"
+  },
+  {
+   "len": "64k",
+   "pos": 0.3,
+   "key": "KOD-2411-DELTA2",
+   "ok": true,
+   "dt": 4.17,
+   "ans": "KOD-2411-DELTA2"
+  },
+  {
+   "len": "64k",
+   "pos": 0.3,
+   "key": "KOD-2512-EPSILON2",
+   "ok": true,
+   "dt": 4.15,
+   "ans": "KOD-2512-EPSILON2"
+  },
+  {
+   "len": "64k",
+   "pos": 0.3,
+   "key": "KOD-2613-ZETA2",
+   "ok": true,
+   "dt": 4.16,
+   "ans": "KOD-2613-ZETA2"
+  },
+  {
+   "len": "64k",
+   "pos": 0.3,
+   "key": "KOD-2714-ETA2",
+   "ok": true,
+   "dt": 4.14,
+   "ans": "KOD-2714-ETA2"
+  },
+  {
+   "len": "64k",
+   "pos": 0.3,
+   "key": "KOD-2815-THETA2",
+   "ok": true,
+   "dt": 4.14,
+   "ans": "KOD-2815-THETA2"
+  },
+  {
+   "len": "64k",
+   "pos": 0.5,
+   "key": "KOD-3116-ALFA3",
+   "ok": true,
+   "dt": 4.14,
+   "ans": "KOD-3116-ALFA3"
+  },
+  {
+   "len": "64k",
+   "pos": 0.5,
+   "key": "KOD-3217-BETA3",
+   "ok": true,
+   "dt": 4.14,
+   "ans": "KOD-3217-BETA3"
+  },
+  {
+   "len": "64k",
+   "pos": 0.5,
+   "key": "KOD-3318-GAMMA3",
+   "ok": true,
+   "dt": 4.13,
+   "ans": "KOD-3318-GAMMA3"
+  },
+  {
+   "len": "64k",
+   "pos": 0.5,
+   "key": "KOD-3419-DELTA3",
+   "ok": true,
+   "dt": 4.14,
+   "ans": "KOD-3419-DELTA3"
+  },
+  {
+   "len": "64k",
+   "pos": 0.5,
+   "key": "KOD-3520-EPSILON3",
+   "ok": true,
+   "dt": 4.13,
+   "ans": "KOD-3520-EPSILON3"
+  },
+  {
+   "len": "64k",
+   "pos": 0.5,
+   "key": "KOD-3621-ZETA3",
+   "ok": true,
+   "dt": 4.15,
+   "ans": "KOD-3621-ZETA3"
+  },
+  {
+   "len": "64k",
+   "pos": 0.5,
+   "key": "KOD-3722-ETA3",
+   "ok": true,
+   "dt": 4.14,
+   "ans": "KOD-3722-ETA3"
+  },
+  {
+   "len": "64k",
+   "pos": 0.5,
+   "key": "KOD-3823-THETA3",
+   "ok": true,
+   "dt": 4.15,
+   "ans": "KOD-3823-THETA3"
+  },
+  {
+   "len": "64k",
+   "pos": 0.7,
+   "key": "KOD-4124-ALFA4",
+   "ok": true,
+   "dt": 4.13,
+   "ans": "KOD-4124-ALFA4"
+  },
+  {
+   "len": "64k",
+   "pos": 0.7,
+   "key": "KOD-4225-BETA4",
+   "ok": true,
+   "dt": 4.15,
+   "ans": "KOD-4225-BETA4"
+  },
+  {
+   "len": "64k",
+   "pos": 0.7,
+   "key": "KOD-4326-GAMMA4",
+   "ok": true,
+   "dt": 4.16,
+   "ans": "KOD-4326-GAMMA4"
+  },
+  {
+   "len": "64k",
+   "pos": 0.7,
+   "key": "KOD-4427-DELTA4",
+   "ok": true,
+   "dt": 4.16,
+   "ans": "KOD-4427-DELTA4"
+  },
+  {
+   "len": "64k",
+   "pos": 0.7,
+   "key": "KOD-4528-EPSILON4",
+   "ok": true,
+   "dt": 4.16,
+   "ans": "KOD-4528-EPSILON4"
+  },
+  {
+   "len": "64k",
+   "pos": 0.7,
+   "key": "KOD-4629-ZETA4",
+   "ok": true,
+   "dt": 4.15,
+   "ans": "KOD-4629-ZETA4"
+  },
+  {
+   "len": "64k",
+   "pos": 0.7,
+   "key": "KOD-4730-ETA4",
+   "ok": true,
+   "dt": 4.22,
+   "ans": "KOD-4730-ETA4"
+  },
+  {
+   "len": "64k",
+   "pos": 0.7,
+   "key": "KOD-4831-THETA4",
+   "ok": true,
+   "dt": 4.16,
+   "ans": "KOD-4831-THETA4"
+  },
+  {
+   "len": "64k",
+   "pos": 0.9,
+   "key": "KOD-5132-ALFA5",
+   "ok": true,
+   "dt": 4.13,
+   "ans": "KOD-5132-ALFA5"
+  },
+  {
+   "len": "64k",
+   "pos": 0.9,
+   "key": "KOD-5233-BETA5",
+   "ok": true,
+   "dt": 4.13,
+   "ans": "KOD-5233-BETA5"
+  },
+  {
+   "len": "64k",
+   "pos": 0.9,
+   "key": "KOD-5334-GAMMA5",
+   "ok": true,
+   "dt": 4.13,
+   "ans": "KOD-5334-GAMMA5"
+  },
+  {
+   "len": "64k",
+   "pos": 0.9,
+   "key": "KOD-5435-DELTA5",
+   "ok": true,
+   "dt": 4.17,
+   "ans": "KOD-5435-DELTA5"
+  },
+  {
+   "len": "64k",
+   "pos": 0.9,
+   "key": "KOD-5536-EPSILON5",
+   "ok": true,
+   "dt": 4.14,
+   "ans": "KOD-5536-EPSILON5"
+  },
+  {
+   "len": "64k",
+   "pos": 0.9,
+   "key": "KOD-5637-ZETA5",
+   "ok": true,
+   "dt": 4.2,
+   "ans": "KOD-5637-ZETA5"
+  },
+  {
+   "len": "64k",
+   "pos": 0.9,
+   "key": "KOD-5738-ETA5",
+   "ok": true,
+   "dt": 4.14,
+   "ans": "KOD-5738-ETA5"
+  },
+  {
+   "len": "64k",
+   "pos": 0.9,
+   "key": "KOD-5839-THETA5",
+   "ok": true,
+   "dt": 4.12,
+   "ans": "KOD-5839-THETA5"
+  },
+  {
+   "len": "120k",
+   "pos": 0.1,
+   "key": "KOD-1100-ALFA1",
+   "ok": true,
+   "dt": 397.2,
+   "ans": "KOD-1100-ALFA1"
+  },
+  {
+   "len": "120k",
+   "pos": 0.1,
+   "key": "KOD-1201-BETA1",
+   "ok": true,
+   "dt": 6.21,
+   "ans": "KOD-1201-BETA1"
+  },
+  {
+   "len": "120k",
+   "pos": 0.1,
+   "key": "KOD-1302-GAMMA1",
+   "ok": true,
+   "dt": 6.32,
+   "ans": "KOD-1302-GAMMA1"
+  },
+  {
+   "len": "120k",
+   "pos": 0.1,
+   "key": "KOD-1403-DELTA1",
+   "ok": true,
+   "dt": 6.19,
+   "ans": "KOD-1403-DELTA1"
+  },
+  {
+   "len": "120k",
+   "pos": 0.1,
+   "key": "KOD-1504-EPSILON1",
+   "ok": true,
+   "dt": 6.19,
+   "ans": "KOD-1504-EPSILON1"
+  },
+  {
+   "len": "120k",
+   "pos": 0.1,
+   "key": "KOD-1605-ZETA1",
+   "ok": true,
+   "dt": 6.18,
+   "ans": "KOD-1605-ZETA1"
+  },
+  {
+   "len": "120k",
+   "pos": 0.1,
+   "key": "KOD-1706-ETA1",
+   "ok": true,
+   "dt": 6.23,
+   "ans": "KOD-1706-ETA1"
+  },
+  {
+   "len": "120k",
+   "pos": 0.1,
+   "key": "KOD-1807-THETA1",
+   "ok": true,
+   "dt": 6.22,
+   "ans": "KOD-1807-THETA1"
+  },
+  {
+   "len": "120k",
+   "pos": 0.3,
+   "key": "KOD-2108-ALFA2",
+   "ok": true,
+   "dt": 6.18,
+   "ans": "KOD-2108-ALFA2"
+  },
+  {
+   "len": "120k",
+   "pos": 0.3,
+   "key": "KOD-2209-BETA2",
+   "ok": true,
+   "dt": 6.19,
+   "ans": "KOD-2209-BETA2"
+  },
+  {
+   "len": "120k",
+   "pos": 0.3,
+   "key": "KOD-2310-GAMMA2",
+   "ok": true,
+   "dt": 6.19,
+   "ans": "KOD-2310-GAMMA2"
+  },
+  {
+   "len": "120k",
+   "pos": 0.3,
+   "key": "KOD-2411-DELTA2",
+   "ok": true,
+   "dt": 6.21,
+   "ans": "KOD-2411-DELTA2"
+  },
+  {
+   "len": "120k",
+   "pos": 0.3,
+   "key": "KOD-2512-EPSILON2",
+   "ok": true,
+   "dt": 6.18,
+   "ans": "KOD-2512-EPSILON2"
+  },
+  {
+   "len": "120k",
+   "pos": 0.3,
+   "key": "KOD-2613-ZETA2",
+   "ok": true,
+   "dt": 6.18,
+   "ans": "KOD-2613-ZETA2"
+  },
+  {
+   "len": "120k",
+   "pos": 0.3,
+   "key": "KOD-2714-ETA2",
+   "ok": true,
+   "dt": 6.21,
+   "ans": "KOD-2714-ETA2"
+  },
+  {
+   "len": "120k",
+   "pos": 0.3,
+   "key": "KOD-2815-THETA2",
+   "ok": true,
+   "dt": 6.2,
+   "ans": "KOD-2815-THETA2"
+  },
+  {
+   "len": "120k",
+   "pos": 0.5,
+   "key": "KOD-3116-ALFA3",
+   "ok": true,
+   "dt": 6.19,
+   "ans": "KOD-3116-ALFA3"
+  },
+  {
+   "len": "120k",
+   "pos": 0.5,
+   "key": "KOD-3217-BETA3",
+   "ok": true,
+   "dt": 6.18,
+   "ans": "KOD-3217-BETA3"
+  },
+  {
+   "len": "120k",
+   "pos": 0.5,
+   "key": "KOD-3318-GAMMA3",
+   "ok": true,
+   "dt": 6.2,
+   "ans": "KOD-3318-GAMMA3"
+  },
+  {
+   "len": "120k",
+   "pos": 0.5,
+   "key": "KOD-3419-DELTA3",
+   "ok": true,
+   "dt": 6.19,
+   "ans": "KOD-3419-DELTA3"
+  },
+  {
+   "len": "120k",
+   "pos": 0.5,
+   "key": "KOD-3520-EPSILON3",
+   "ok": true,
+   "dt": 6.27,
+   "ans": "KOD-3520-EPSILON3"
+  },
+  {
+   "len": "120k",
+   "pos": 0.5,
+   "key": "KOD-3621-ZETA3",
+   "ok": true,
+   "dt": 6.21,
+   "ans": "KOD-3621-ZETA3"
+  },
+  {
+   "len": "120k",
+   "pos": 0.5,
+   "key": "KOD-3722-ETA3",
+   "ok": true,
+   "dt": 6.25,
+   "ans": "KOD-3722-ETA3"
+  },
+  {
+   "len": "120k",
+   "pos": 0.5,
+   "key": "KOD-3823-THETA3",
+   "ok": true,
+   "dt": 6.19,
+   "ans": "KOD-3823-THETA3"
+  },
+  {
+   "len": "120k",
+   "pos": 0.7,
+   "key": "KOD-4124-ALFA4",
+   "ok": true,
+   "dt": 6.19,
+   "ans": "KOD-4124-ALFA4"
+  },
+  {
+   "len": "120k",
+   "pos": 0.7,
+   "key": "KOD-4225-BETA4",
+   "ok": true,
+   "dt": 6.2,
+   "ans": "KOD-4225-BETA4"
+  },
+  {
+   "len": "120k",
+   "pos": 0.7,
+   "key": "KOD-4326-GAMMA4",
+   "ok": true,
+   "dt": 6.22,
+   "ans": "KOD-4326-GAMMA4"
+  },
+  {
+   "len": "120k",
+   "pos": 0.7,
+   "key": "KOD-4427-DELTA4",
+   "ok": true,
+   "dt": 6.21,
+   "ans": "KOD-4427-DELTA4"
+  },
+  {
+   "len": "120k",
+   "pos": 0.7,
+   "key": "KOD-4528-EPSILON4",
+   "ok": true,
+   "dt": 6.18,
+   "ans": "KOD-4528-EPSILON4"
+  },
+  {
+   "len": "120k",
+   "pos": 0.7,
+   "key": "KOD-4629-ZETA4",
+   "ok": true,
+   "dt": 6.18,
+   "ans": "KOD-4629-ZETA4"
+  },
+  {
+   "len": "120k",
+   "pos": 0.7,
+   "key": "KOD-4730-ETA4",
+   "ok": true,
+   "dt": 6.25,
+   "ans": "KOD-4730-ETA4"
+  },
+  {
+   "len": "120k",
+   "pos": 0.7,
+   "key": "KOD-4831-THETA4",
+   "ok": true,
+   "dt": 6.2,
+   "ans": "KOD-4831-THETA4"
+  },
+  {
+   "len": "120k",
+   "pos": 0.9,
+   "key": "KOD-5132-ALFA5",
+   "ok": true,
+   "dt": 6.2,
+   "ans": "KOD-5132-ALFA5"
+  },
+  {
+   "len": "120k",
+   "pos": 0.9,
+   "key": "KOD-5233-BETA5",
+   "ok": true,
+   "dt": 6.18,
+   "ans": "KOD-5233-BETA5"
+  },
+  {
+   "len": "120k",
+   "pos": 0.9,
+   "key": "KOD-5334-GAMMA5",
+   "ok": true,
+   "dt": 6.19,
+   "ans": "KOD-5334-GAMMA5"
+  },
+  {
+   "len": "120k",
+   "pos": 0.9,
+   "key": "KOD-5435-DELTA5",
+   "ok": true,
+   "dt": 6.21,
+   "ans": "KOD-5435-DELTA5"
+  },
+  {
+   "len": "120k",
+   "pos": 0.9,
+   "key": "KOD-5536-EPSILON5",
+   "ok": true,
+   "dt": 6.21,
+   "ans": "KOD-5536-EPSILON5"
+  },
+  {
+   "len": "120k",
+   "pos": 0.9,
+   "key": "KOD-5637-ZETA5",
+   "ok": true,
+   "dt": 6.18,
+   "ans": "KOD-5637-ZETA5"
+  },
+  {
+   "len": "120k",
+   "pos": 0.9,
+   "key": "KOD-5738-ETA5",
+   "ok": true,
+   "dt": 6.23,
+   "ans": "KOD-5738-ETA5"
+  },
+  {
+   "len": "120k",
+   "pos": 0.9,
+   "key": "KOD-5839-THETA5",
+   "ok": true,
+   "dt": 6.19,
+   "ans": "KOD-5839-THETA5"
+  }
+ ],
+ "t_end": "17:13:30"
+}
