@@ -103,23 +103,27 @@ manifest row.
 
 ### GTT at 128K
 
-Both variants report about 997 MiB in GTT at `--ctx-size 131072`, which looks
-like a spill to system RAM and is not one. It decomposes exactly into the host
-buffers `llama-server` always allocates:
+Both variants sit at roughly 1 GB of GTT at `--ctx-size 131072`, which looks
+like a spill to system RAM and is not one. It is the host buffers `llama-server`
+allocates in either case, all three in `kv-startup-128k.log`:
 
 | buffer | MiB |
 |---|---:|
 | `CPU_Mapped model buffer` | 682.03 |
 | `Vulkan_Host compute buffer` | 296.04 |
 | `CPU compute buffer` | 24.93 |
+| sum | 1003.00 |
 
-The same `682.03 MiB` figure appears in a `--ctx-size 65536` log from the
-earlier round, so it is not an artifact of the longer context. The startup log
-places 66 of 66 layers on the GPU and every KV buffer on `Vulkan0`, and the runs
-had `RADV_PERFTEST=nogttspill` set, under which an over-allocation fails instead
-of falling back to host memory. Prefill throughput does drop with context
-(694 tok/s at 8K to 311 tok/s at 120K), equally in both variants, which is
-attention cost rather than a memory-path change.
+The GTT total read from `rocm-smi` while the runs were in flight was about
+997 MiB, so these three account for it to within about 6 MiB; that residual is
+not chased here and the sampled total is not a committed figure.
+
+`kv-startup-128k.log` places 66 of 66 layers on the GPU and every KV buffer on
+`Vulkan0`, and the runs had `RADV_PERFTEST=nogttspill` set, under which an
+over-allocation fails instead of falling back to host memory. Prefill throughput
+does drop with context, 689 to 311 tok/s with `q8_0` and 695 to 306 with
+`turbo4` between prompts of 7948 and 120017 tokens, which is attention cost
+rather than a memory-path change.
 
 ## Long-context task files
 

@@ -43,9 +43,10 @@ def build_n(target,needles=()):
     t="\n\n".join(sel)
     return t,lo,ntok(t)
 QCTRL="\n\nPytanie: podsumuj jednym zdaniem, czym rozni sie polityka write-back od write-through."
-def one(prompt,cache,mt=1,top=20):
+def one(prompt,cache,mt=1,top=20,nothink=False):
     b={"messages":[{"role":"user","content":prompt}],"temperature":0,"top_k":1,"top_p":1,
        "seed":42,"max_tokens":mt,"cache_prompt":cache}
+    if nothink: b["chat_template_kwargs"]={"enable_thinking":False}
     if top: b["logprobs"]=True; b["top_logprobs"]=top
     t0=time.time(); r=post("/v1/chat/completions",b); dt=time.time()-t0
     ch=r["choices"][0]

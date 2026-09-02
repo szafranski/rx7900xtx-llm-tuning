@@ -21,6 +21,7 @@ kv-nexttoken-q8.json,"Next-token distributions at 8K-120K, q8_0 V cache, ctx 131
 kv-nexttoken-turbo4.json,"Next-token distributions at 8K-120K, turbo4 V cache, ctx 131072","272 W, -75 mV, 2200 MHz",kv_run_nexttoken.py,7,14556,c7b737a3771a587606a4ab6c055f6ba2e0941a8828e05bbd21ac3c5eb8ff4bd4
 kv-repeat-q8-64k.json,"Four recomputes of one 64K prompt, q8_0 V cache","272 W, -75 mV, 2200 MHz",kv_run_repeat.py,3,5479,20a8a8a3eb0267a32ace8499c2e88173bffb63b5defe32eee5af2c9eb2b1e053
 kv-repeat-turbo4-64k.json,"Four recomputes of one 64K prompt, turbo4 V cache","272 W, -75 mV, 2200 MHz",kv_run_repeat.py,3,5524,447b43a05a9bdf81298f731576c9bf7d0281ba8a5e34d53de47ee890bf7a9e94
+kv-startup-128k.log,"Startup and prefill timing lines behind the memory figures, both cache types","272 W, -75 mV, 2200 MHz",srv-kv-128k.sh,227,31761,caeae08dc59d8703c797b03e4768587ea51da1989a4cec4559d01d01e59737fa
 kv-vision-q8.json,"Three image tasks, q8_0 V cache, ctx 131072","272 W, -75 mV, 2200 MHz",kv_run_vision.py,4,543,d475aad6c284684a8e4d2313fae8e146cd04b7f64c87a3569ce261d62cc01c5a
 kv-vision-turbo4.json,"Three image tasks, turbo4 V cache, ctx 131072","272 W, -75 mV, 2200 MHz",kv_run_vision.py,4,547,028159ecaaa718405517f12b7b7c91f1545fd4ef09d68cce8fe5c4d99b873ce5
 multiturn-contents.jsonl,Per-turn output of the multi-turn session,"272 W, -75 mV, 2200 MHz",bench-multiturn.sh,3,8358,6be3f1b1fcced82b26b9afe5bc4d13c22da9185ef834639b6c63723627e7f990

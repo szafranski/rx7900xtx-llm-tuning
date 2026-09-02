@@ -28,8 +28,10 @@ The table above compares the two cache types on speed and VRAM. It does not
 say whether they compute the same thing. This section is a second round aimed
 at that question, run at `--ctx-size 131072` on both variants with everything
 else held fixed. Scripts are `scripts/kv_run_*.py` against
-`scripts/srv-kv-128k.sh`; every figure below is reproduced by
-`scripts/kv_distribution.py`.
+`scripts/srv-kv-128k.sh`. Every distribution figure below is reproduced by
+`scripts/kv_distribution.py`; the memory and throughput figures at the end of the
+section come from the server startup log excerpted in
+`data/kv-startup-128k.log`.
 
 ### How the comparison is measured
 
@@ -62,9 +64,10 @@ bounds nothing. Read it as: on this machine `q8_0`'s repeat spread was under
 0.002 and `turbo4`'s reached 0.014, with no overlap between the two sets of six
 pairs.
 
-Two repeats of an 8K prompt served from a warm prompt cache came back at
-distance 0 in both variants. A null pair that easy is not a floor, which is why
-the four-recompute measurement above exists.
+Two full recomputes of an 8K prompt, prompt cache off, came back at distance 0
+in both variants, and repeats served from a warm cache did the same. Neither is
+a floor: the spread only appears at longer contexts, which is why the
+four-recompute measurement above was run at 64K.
 
 ### The difference between the variants is inside that spread
 
@@ -118,10 +121,11 @@ Three image tasks passed in both variants (`data/kv-vision-*.json`, inputs in
 across variants; the third differed in wording and was correct in both. Three
 tasks is a smoke test.
 
-Both of these ran with `enable_thinking: false` per request, while the shipped
-profile runs reasoning on. The deviation was applied identically to both
-variants, so it does not bias the comparison, but it does mean these numbers
-are not the accuracy a user of the shipped profile would see.
+The needle matrix ran with `enable_thinking: false` per request, while the
+shipped profile runs reasoning on; the vision cases did not set the flag and so
+ran as the profile does. The deviation was applied identically to both variants,
+so it does not bias the comparison between them, but it does mean the needle
+figures are not the accuracy a user of the shipped profile would see.
 
 ### VRAM headroom is the actual argument
 
@@ -141,11 +145,14 @@ be your regression signal.
 
 Nothing spilled to system RAM in either variant: 66 of 66 layers on the GPU, all
 KV on `Vulkan0`, and `RADV_PERFTEST=nogttspill` set so an over-allocation fails
-instead of spilling. The GTT arithmetic behind that is in
-[data/README.md](../data/README.md#gtt-at-128k).
+instead of spilling. Roughly 1 GB does sit in GTT, and it is the host buffers
+`llama-server` allocates regardless; the arithmetic, including the 6 MiB it does
+not account for, is in [data/README.md](../data/README.md#gtt-at-128k).
 
-Prefill throughput falls with context on both: 694 tok/s at 8K, 311 tok/s at
-120K. Attention cost, and it happens equally in both variants.
+Prefill throughput falls with context on both: 689 tok/s at 8K and 311 tok/s at
+120K with `q8_0`, 695 and 306 with `turbo4`, on prompts of 7948 and 120017
+tokens (`data/kv-startup-128k.log`). Attention cost, and it happens to much the
+same degree in both.
 
 ### What this section does not establish
 
@@ -201,7 +208,9 @@ random, not derived from position, which was a defect of the needle matrix.
 At 120K, direct key retrieval held at 14 of 16 while two-hop retrieval fell to 6
 and counting reached 0. **Every counting error in both variants is an
 undercount, never an overcount**, so the failure is missed entries rather than
-guessing, and the model states the wrong count with no sign of difficulty.
+guessing. The prompt asks for a bare number and reasoning was off, so there was
+no channel in which hesitation could have shown: all 88 wrong counts are a bare
+digit.
 
 Eight unique items per type per length is a small sample and the reading should
 stay narrow: this is what these tasks did on this corpus, not a general
@@ -225,9 +234,12 @@ length `q8_0` scored 40/32/28/20 against `turbo4`'s 38/34/28/20.
 
 The floor to read that against is the same variant answering the same item
 twice: `turbo4` disagreed with itself on 0 of 96 positions, `q8_0` on 1 of 96.
-So 7 of 192 is above the reproducibility floor - the cache type does change
-individual answers - and it is not a direction. On this benchmark `turbo4` shows
-no accuracy cost against `q8_0`.
+Like for like that is 3.6 percent of answers differing between the variants
+against 0 and 1.0 percent within them, so something beyond the item is moving
+individual answers. This design cannot say whether that something is the cache
+type or the run order, which was reversed between the variants. What it can say
+is that it has no direction: on this benchmark `turbo4` shows no accuracy cost
+against `q8_0`.
 
 That the repeats are nearly deterministic is worth stating plainly, because it
 cuts both ways: it makes the floor tight, and it means the second pass is
@@ -246,8 +258,9 @@ sample is closer to eight items per cell than sixteen.
 - Run order was counterbalanced, `turbo4` ascending and `q8_0` descending. That
   removes a shared drift but **confounds variant with order**: the two-point
   crossovers at 8K and 32K could be order, item-level counting variation, or
-  noise, and this design cannot separate them. Reversing the order produced no
-  systematic advantage either way, which is all that can be said.
+  noise, and this design cannot separate them. Each variant ran in one order
+  only, so there is no order control here; the two orders reached the same
+  total, which is all that can be said.
 - One card, one model, one build, one generated corpus. The test can only detect
   a difference larger than its own resolution, and eight unique items per cell
   is a coarse resolution. It did not find one.

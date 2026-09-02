@@ -53,6 +53,7 @@ EXPERIMENTS = {
     "multiturn-contents.jsonl":    ("Per-turn output of the multi-turn session", "272 W, -75 mV, 2200 MHz", "bench-multiturn.sh"),
     "energy-early.jsonl":          ("Early energy measurements, before the profile was fixed", "varied", "bench-energy-early.sh"),
     "energy-early-soak.jsonl":     ("Early soak, before the profile was fixed", "varied", "bench-energy-early.sh"),
+    "kv-startup-128k.log":         ("Startup and prefill timing lines behind the memory figures, both cache types", "272 W, -75 mV, 2200 MHz", "srv-kv-128k.sh"),
     "kv-longctx-q8.json":          ("Three-task long-context set at 8K-120K, q8_0 V cache, two passes", "272 W, -75 mV, 2200 MHz", "kv_run_longctx.py"),
     "kv-longctx-turbo4.json":      ("Three-task long-context set at 8K-120K, turbo4 V cache, two passes", "272 W, -75 mV, 2200 MHz", "kv_run_longctx.py"),
     "kv-longctx-items.json":       ("Questions and answer keys for the long-context set", "n/a", "kv_gen_longctx.py"),
