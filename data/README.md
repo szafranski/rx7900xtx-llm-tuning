@@ -147,6 +147,22 @@ the key set per partition as extracted from the frozen context files, not from
 the generator, which is what the script checks the generator against before it
 sends anything.
 
+`kv-enumerate-turbo4-listfirst.json` is the same test with the two questions
+swapped, so the list is asked before the count. Identical fields; the `pair`
+field reads `LN` instead of `NL`. It exists because the n-gram map the server
+keeps between requests made the fixed order a confound.
+
+`kv-reasoning-120k.json` holds the reasoning-on against reasoning-off arms at
+120K on the shipped profile. Each `runs` entry carries `arm` (`on` or `off`),
+`arm_pos` (which position in the pair it took, since the order alternates
+between repeats), `typ`, `exp`, `got`, `ok`, `bare` (whether the reply was the
+bare value rather than a sentence containing it), `trunc`, `dt`, `compl_tok`,
+`reas_chars` (length of the reasoning trace in characters, which is not scored),
+`finish` and `cached`, plus the first 200 characters of the reply. `pilot` and
+`pilot_summary` record the three probe queries that set `max_tokens` for the
+run, and `sampling` the sampling parameters, which are the shipped profile's and
+not greedy - unlike every other file in this group.
+
 `kv-longctx-items.json` holds the 24 questions with their answers and the
 generator's seed. The contexts themselves are reproducible from
 `../scripts/kv_gen_longctx.py` with that seed and are not committed.

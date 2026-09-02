@@ -13,6 +13,7 @@ energy-early-soak.jsonl,"Early soak, before the profile was fixed",varied,bench-
 energy-early.jsonl,"Early energy measurements, before the profile was fixed",varied,bench-energy-early.sh,11,9352,1d8938a683a80490d5885fdc2a744a644c26e969a1a49285c96bba40e6adc738
 idle-power.jsonl,Idle GPU power baseline,factory and capped,bench-idle.sh,10,4805,db5617bc4467f165c5e0cda557df2d04fd68862786ee18f2d151059da7ccb929
 idle-with-projector.jsonl,Idle power with the vision projector loaded,"272 W, -75 mV, 2200 MHz",bench-idle-projector.sh,6,2860,76d1be3110037355ff626b3c0804694aa7e3b996ec65dd3c8227c4799d9a7764
+kv-enumerate-turbo4-listfirst.json,"Same test with the list asked first, the pair-order control","272 W, -75 mV, 2200 MHz",kv_run_enumerate.py,7,13211,e8a6bea392b63797072cd366726a5e78d09db1c24b0971445c4387d0c3d30080
 kv-enumerate-turbo4.json,"Counting vs enumerating the same scattered entries, 64K and 120K, turbo4 V cache","272 W, -75 mV, 2200 MHz",kv_run_enumerate.py,6,12570,58f40cd0da7fd81388477a7877fdf669e7c92e161e7b523a5387652dc5bce465
 kv-longctx-items.json,Questions and answer keys for the long-context set,n/a,kv_gen_longctx.py,5,3610,681ad6c0ef52e924635c33f97ce7b45d3526a5d4ced07eacde70cca180e470f5
 kv-longctx-q8.json,"Three-task long-context set at 8K-120K, q8_0 V cache, two passes","272 W, -75 mV, 2200 MHz",kv_run_longctx.py,6,33212,315321be7f521cd8f31d7d947585148f84eb50df47ac969ebcc0634bee734691
@@ -20,6 +21,7 @@ kv-longctx-turbo4.json,"Three-task long-context set at 8K-120K, turbo4 V cache, 
 kv-needles-turbo4.json,"160-cell needle matrix, turbo4 V cache, ceiling result","272 W, -75 mV, 2200 MHz",kv_run_needles.py,4,20436,fe0a420d8c6e78052324a86e24754b0d02e27f97222591c6eda35b17f9a62ab4
 kv-nexttoken-q8.json,"Next-token distributions at 8K-120K, q8_0 V cache, ctx 131072","272 W, -75 mV, 2200 MHz",kv_run_nexttoken.py,7,14516,ed99d5933685d742fbc7676250ac1525fdc0e5939fd528eabe6b234d47af336d
 kv-nexttoken-turbo4.json,"Next-token distributions at 8K-120K, turbo4 V cache, ctx 131072","272 W, -75 mV, 2200 MHz",kv_run_nexttoken.py,7,14556,c7b737a3771a587606a4ab6c055f6ba2e0941a8828e05bbd21ac3c5eb8ff4bd4
+kv-reasoning-120k.json,"Reasoning on vs off at 120K on the shipped profile, counting and two-hop","272 W, -75 mV, 2200 MHz",kv_run_reasoning.py,10,40698,3b6453900ee6e992d5c23356ba8d0398e8446ab38eb8a29d8ab837a53d7b7e93
 kv-repeat-q8-64k.json,"Four recomputes of one 64K prompt, q8_0 V cache","272 W, -75 mV, 2200 MHz",kv_run_repeat.py,3,5479,20a8a8a3eb0267a32ace8499c2e88173bffb63b5defe32eee5af2c9eb2b1e053
 kv-repeat-turbo4-64k.json,"Four recomputes of one 64K prompt, turbo4 V cache","272 W, -75 mV, 2200 MHz",kv_run_repeat.py,3,5524,447b43a05a9bdf81298f731576c9bf7d0281ba8a5e34d53de47ee890bf7a9e94
 kv-startup-128k.log,"Startup and prefill timing lines behind the memory figures, both cache types","272 W, -75 mV, 2200 MHz",srv-kv-128k.sh,227,31761,caeae08dc59d8703c797b03e4768587ea51da1989a4cec4559d01d01e59737fa

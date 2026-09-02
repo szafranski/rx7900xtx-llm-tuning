@@ -207,7 +207,10 @@ random, not derived from position, which was a defect of the needle matrix.
 
 At 120K, direct key retrieval held at 14 of 16 while two-hop retrieval fell to 6
 and counting reached 0. **Every counting error in both variants is an
-undercount, never an overcount.** The follow-up test in the next section shows
+undercount, never an overcount** - in these greedy runs. The reasoning-arm
+section below repeats the counting items with the shipped profile's sampling and
+records one overcount there, so the direction is a property of what was measured
+here, not of the model. The follow-up test in the next section shows
 that this does not mean the entries were missed: asked to list them instead, the
 model usually names the complete set and still reports a smaller number. With
 reasoning off and a bare-number response format, a wrong count carries no
@@ -248,7 +251,7 @@ them and counted 52. Its count did not even match the length of its own list:
 `count == len(list)` in 3 of 16 at 64K and 6 of 16 at 120K, and at 120K the
 count was below its own list ten times and above it never. No key was invented
 in any of the 32 items. All 30 wrong counts undercount, by 1.12 keys on average
-at both lengths.
+at both lengths, greedy throughout.
 
 The count accuracy came out 2/16 at 64K and 0/16 at 120K, which is exactly what
 type C scored in the matrix above, from a separate server start on a separate
@@ -262,15 +265,39 @@ incomplete lists untouched, and a recall of 0.91 is not 1.0 - some entries are
 genuinely lost. The honest summary is that on this corpus counting is wrong
 essentially always while enumeration loses about 9 percent of entries.
 
+#### The pair order was a real confound, and it was measured
+
+The list was always the second question of the pair above. Each request is a
+standalone completion carrying no conversation history, and both questions read
+the same cached prefix, but the server runs `--spec-type draft-mtp,ngram-map-k`
+and its n-gram map does persist across requests, so the two positions were not
+provably equivalent. The whole set was re-run with the list asked first
+(`data/kv-enumerate-turbo4-listfirst.json`, same runner with the pair flag
+`LN`).
+
+| | 64K count-first | 64K list-first | 120K count-first | 120K list-first |
+|---|---:|---:|---:|---:|
+| count correct | 2/16 | 2/16 | 0/16 | 2/16 |
+| list complete | 11/16 | 14/16 | 10/16 | 10/16 |
+| keys recalled | 0.929 | 0.971 | 0.914 | 0.914 |
+
+Order does matter, and it worked against the first run rather than for it: at
+64K the list came out better when asked first, 14 of 16 complete against 11,
+and three items changed their list. At 120K no list changed and two counts did.
+So the enumeration figures in the table above are, if anything, understated.
+
+Pooling both orders sharpens the central claim instead of weakening it: across
+all 64 items there are **45 cases where the list was complete, and the count was
+correct in none of them**. All six correct counts in the whole set occurred on
+items where the list was incomplete. Counting and enumeration are not two views
+of one retrieval - on this corpus they behave as independent, and getting the
+count right was never a consequence of having the entries.
+
 What this does not establish: that the mechanism is general rather than specific
-to these items, that the cache type or the disabled reasoning has anything to do
-with it, that a list always rescues a count, or that eight items and two passes
-scale to a rate. One asymmetry is structural and worth naming: the list was
-always the second question of the pair. Each request is a standalone completion
-carrying no conversation history, and both questions read the same cached
-prefix, but the server runs `--spec-type draft-mtp,ngram-map-k` and its n-gram
-map does persist across requests, so the two positions in the pair are not
-provably equivalent. An arm with the list asked first would close that.
+to these items, that the cache type has anything to do with it, that a list
+always rescues a count, or that eight items scale to a rate. The disabled
+reasoning does turn out to matter, and by more than anything else measured here;
+that is the next section.
 
 ### The two cache types score the same
 
@@ -317,6 +344,69 @@ sample is closer to eight items per cell than sixteen.
 - One card, one model, one build, one generated corpus. The test can only detect
   a difference larger than its own resolution, and eight unique items per cell
   is a coarse resolution. It did not find one.
+
+### Reasoning on: the errors above do not appear at all
+
+Every accuracy in this whole section was measured with `enable_thinking: false`,
+while the shipped profile runs reasoning on. That makes the numbers above a
+statement about a configuration nobody here actually serves, so the counting and
+two-hop items were re-run at 120K with both arms on one server.
+
+The server carries the **shipped** profile this time, not a comparable-to-earlier
+baseline: sampling `--temp 0.6 --top-p 0.95 --top-k 20 --min-p 0.05`,
+`--cache-reuse 256`, `--reasoning-effort medium`, `--reasoning-budget 8192`
+(`scripts/srv-kv-reasoning.sh`). External validity to the deployed profile was
+chosen over comparability with the greedy phases, so the earlier 0/16 is not a
+control for this - the `off` arm below is. Eight type B and eight type C items,
+four repeats, both arms per item, arm order alternating between repeats,
+seed `1000*rep+i`: 128 queries. Only `content` is scored; the reasoning trace is
+not. Runner `scripts/kv_run_reasoning.py`, results `data/kv-reasoning-120k.json`.
+
+| arm | type | correct | median latency | median output tokens |
+|---|---|---:|---:|---:|
+| reasoning off | B two-hop | 11/32 | 3.7 s | 8 |
+| reasoning off | C counting | 8/32 | 3.5 s | 2 |
+| reasoning on | B two-hop | 32/32 | 8.6 s | 179 |
+| reasoning on | C counting | 32/32 | 60.7 s | 2554 |
+
+**64 of 64 against 19 of 64.** Not one error survived in the reasoning arm, on
+either question type. Nothing else measured on this card moves a quality number
+by that much.
+
+The supporting readings are all clean. Zero truncations in 128 queries, so the
+operational reading (a truncation counts as a failure) and the conditional one
+(only finished answers) are the same table. Zero non-bare answers, so the
+grading trap that a prose reply would have sprung - `partycja 77 ma 5 kluczy`
+scored as 77 - never fired; the model answered with the bare value every time.
+Position within the pair had no effect: 10/32 against 9/32 in the `off` arm,
+32/32 in both positions in the `on` arm. The `off` arm also replicates phase 4
+on the two-hop items, 34.4 percent here against 37.5 percent there, which is the
+one thing here that behaves as a control should.
+
+The cost is the whole trade. A counting answer's median goes from 3.5 s to
+60.7 s, 17.3x, and from 2 output tokens to 2554 - of which effectively all are
+reasoning, since the answer itself is one character. The longest single answer
+used 3532 tokens. That is 43 percent of the 8192-token budget, so the budget was
+comfortable for everything asked: no answer was cut off and the worst case left
+4660 tokens unused.
+
+What this does and does not license. It is accurate that **no error occurred**
+in the reasoning arm on this material; it is not accurate to say reasoning fixes
+counting. There are eight distinct questions per type, and the four repeats
+measure decode stability, not material diversity - so for generalising to new
+questions the effective n is 8, and 0 of 8 still admits a true error rate around
+30 percent at 95 percent confidence. The repeat agreement in the `on` arm (0 of
+16 items answered inconsistently, against 13 of 16 with reasoning off) is a
+consequence of 64/64 and not independent evidence about sampling: with a single
+unambiguous bare answer, every correct run necessarily agrees with every other.
+
+Nor does this retire the client-side mitigation from the previous section. It
+shows the shipped profile did not need it here, not that it is safe to drop for
+new material, and the list-and-count route is 17x cheaper per answer. Untouched
+entirely: other context lengths, other documents, whether the budget holds for
+harder reasoning, and whether reasoning repairs the arithmetic or merely spends
+enough tokens to work around it. The counting weakness documented above is real
+for a reasoning-off client and was not reproducible with reasoning on.
 
 ## The quality gate hit its ceiling
 
