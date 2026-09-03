@@ -73,6 +73,12 @@ EXPERIMENTS = {
     "spec-mtp-early.jsonl":        ("First MTP measurements", "303 W, 0 mV", "bench-context-32k.sh"),
 }
 
+# The single-object JSON files keep their per-request records under one key.
+# Counting top-level keys instead would report the number of sections, not the
+# sample size, which is what this column is read for: kv-longctx-q8.json has
+# six top-level keys and 192 requests.
+RECORD_KEYS = ("runs", "cells", "cases", "items")
+
 def records(p):
     if p.suffix == ".jsonl":
         return sum(1 for l in p.open(encoding="utf-8", errors="replace")
@@ -80,10 +86,21 @@ def records(p):
     if p.suffix == ".json":
         try:
             o = json.loads(p.read_text(encoding="utf-8"))
-            return len(o) if isinstance(o, (list, dict)) else 1
         except json.JSONDecodeError:
             return ""
-    return sum(1 for _ in p.open(encoding="utf-8", errors="replace"))
+        if isinstance(o, list):
+            return len(o)
+        if not isinstance(o, dict):
+            return 1
+        for k in RECORD_KEYS:
+            if isinstance(o[k] if k in o else None, list):
+                return len(o[k])
+        # kv-nexttoken-*: one section per sub-test, each a list of requests
+        tests = [v for k, v in o.items()
+                 if k.startswith("test") and isinstance(v, (list, dict))]
+        if tests:
+            return sum(len(v) for v in tests)
+        return len(o)
 
 def main():
     rows, missing = [], []

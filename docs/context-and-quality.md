@@ -89,8 +89,9 @@ with context length.
 
 The column that does move monotonically is confidence: p(top-1) falls from
 0.99999 to 0.94 as the context grows, by almost the same amount in both
-variants. That is the model getting less certain with more context in front of
-it, not a cache error.
+variants. That is this prompt's top-1 probability falling as the context in front of it
+grows, by almost the same amount in both variants, rather than a cache error. It
+is one prompt, so it says nothing about how confidence behaves in general.
 
 ### Prompt-cache reuse moves the distribution, in both variants
 
@@ -263,7 +264,7 @@ the returned list is complete: it would lift 2 of 32 correct counts to 21 of 32
 here. It is not a prompt-level fix for the limitation, because it leaves the 11
 incomplete lists untouched, and a recall of 0.91 is not 1.0 - some entries are
 genuinely lost. The honest summary is that on this corpus counting is wrong
-essentially always while enumeration loses about 9 percent of entries.
+essentially always while these runs recalled 91 percent of the entries.
 
 #### The pair order was a real confound, and it was measured
 
@@ -290,8 +291,10 @@ Pooling both orders sharpens the central claim instead of weakening it: across
 all 64 items there are **45 cases where the list was complete, and the count was
 correct in none of them**. All six correct counts in the whole set occurred on
 items where the list was incomplete. Counting and enumeration are not two views
-of one retrieval - on this corpus they behave as independent, and getting the
-count right was never a consequence of having the entries.
+of one retrieval: on this corpus they dissociate, and getting the count right
+was never a consequence of having the entries. Note the direction, because it is
+not independence - every correct count sat on an incomplete list, so the two are
+associated, just not in the way a shared-retrieval account would predict.
 
 What this does not establish: that the mechanism is general rather than specific
 to these items, that the cache type has anything to do with it, that a list
@@ -565,16 +568,41 @@ wrong, it is not the completeness of the list the model writes out. That sits
 alongside the earlier finding that a reasoning-off model
 [names the entries correctly and still miscounts them](#counting-fails-while-enumeration-mostly-works).
 
-We cannot say which mechanism this is. 8/8 rules out luck; it does not show
-whether the answer is read off attention over the context with the enumeration
-as theatre, or something else. And the ceiling caveat applies with full force:
+We cannot say which mechanism this is. Eight correct counts out of eight is
+consistent behaviour on these eight items, not proof that chance is excluded,
+and it does not show whether the answer is read off attention over the context
+with the enumeration as theatre, or something else. And the ceiling caveat applies with full force:
 8 distinct questions per type, `medium` at budget 8192 already scored 8/8 on
 them, so a tie discriminates nothing and 0/8 errors admits a true error rate
 around 30 percent at 95 percent confidence. The supported claim is that on this
-material the budget is not the binding constraint and running out of it does not
-damage the answer - not that 512 is enough. Data:
+material the budget is not the binding constraint, and that in all 16 answers
+here running out of it left the reply complete - not that 512 is enough, and not
+that an answer can never be damaged. Data:
 `data/kv-budget-512-120k.json`, `scripts/kv_run_budget.py`,
 `scripts/srv-kv-budget.sh`.
+
+#### Two levers, one soft and one hard
+
+The two ways to spend fewer reasoning tokens are not variants of one knob. They
+act in different places, and that decides how each one behaves:
+
+| | `reasoning_effort` | `--reasoning-budget` |
+|---|---|---|
+| where it acts | a sentence the chat template puts in the prompt | a cap on how many tokens the thinking block may generate |
+| what the model knows | it reads the instruction and may or may not follow it | nothing; the server ends the block from outside |
+| effect on the thought | shorter and properly closed, when it is followed | truncated where the cap falls, mid-sentence |
+| predictability | bimodal here: 6 of 32 counting queries ignored `low` and ran to ~2900 tokens | exact: 7 of 8 counting replies stopped at 515 tokens |
+| effect on the prompt cache | changing the level invalidates the whole prefix | none, the prompt is untouched |
+| how it is set | per request | a server flag, so each value needs its own server |
+
+That is why the budget produced a clean 4.9x token reduction on counting while
+`low` produced a 6x drop in the median and no change at the p90. The instruction
+can be declined; the cap cannot.
+
+What neither lever does is make the reply shorter. Retrieval answers came back
+at a median of 179 completion tokens at `medium`, 181 at `low` and 178.5 under
+the budget, because the tokens being cut are the ones the model spends thinking,
+and retrieval barely spends any.
 
 ## The quality gate hit its ceiling
 
