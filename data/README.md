@@ -163,6 +163,24 @@ bare value rather than a sentence containing it), `trunc`, `dt`, `compl_tok`,
 run, and `sampling` the sampling parameters, which are the shipped profile's and
 not greedy - unlike every other file in this group.
 
+`kv-effort-low-120k.json` replays the same 120K items at
+`reasoning_effort: low`, overridden per request on the same server, so it pairs
+one-to-one with the `on` arm of `kv-reasoning-120k.json` by `rep` and `i`. Field
+names match that file, minus `arm_pos` (there is one arm) and plus the timing
+split llama.cpp returns: `prompt_n`/`prompt_ms` for prefill and
+`predicted_n`/`predicted_ms` for generation, with `draft_n`/`draft_acc` for the
+speculative counters. `dt` is still wall clock and includes prefill, so it is
+the wrong column for comparing levels; use `predicted_ms`. `warm` holds the
+single query that pays the arm's prefill.
+
+`kv-effort-prompt-cache-pilot.json` is the pilot that decided the design of that
+run. `A` holds what `/apply-template` renders at each effort level, keyed by
+level with `len` and the first 260 characters. `B` holds four full 120K queries
+alternating `medium` and `low`, each with `prompt_n`, `cached`, `prompt_ms` and
+`predicted_ms`, which is where the prefix-cache invalidation is visible. Only
+the first two entries were run; the remaining pair was cancelled once the answer
+was unambiguous, so `B` has two records rather than four.
+
 `kv-longctx-items.json` holds the 24 questions with their answers and the
 generator's seed. The contexts themselves are reproducible from
 `../scripts/kv_gen_longctx.py` with that seed and are not committed.

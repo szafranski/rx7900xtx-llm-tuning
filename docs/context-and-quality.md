@@ -355,7 +355,11 @@ two-hop items were re-run at 120K with both arms on one server.
 The server carries the **shipped** profile this time, not a comparable-to-earlier
 baseline: sampling `--temp 0.6 --top-p 0.95 --top-k 20 --min-p 0.05`,
 `--cache-reuse 256`, `--reasoning-effort medium`, `--reasoning-budget 8192`
-(`scripts/srv-kv-reasoning.sh`). External validity to the deployed profile was
+(`scripts/srv-kv-reasoning.sh`). One thing about that flag is worth knowing before
+reading the table: `--reasoning-effort medium` puts **no instruction at all**
+into the prompt - it renders byte for byte like passing no level, as the next
+section shows. So this arm is reasoning with no effort instruction, not
+reasoning turned down. External validity to the deployed profile was
 chosen over comparability with the greedy phases, so the earlier 0/16 is not a
 control for this - the `off` arm below is. Eight type B and eight type C items,
 four repeats, both arms per item, arm order alternating between repeats,
@@ -408,6 +412,117 @@ harder reasoning, and whether reasoning repairs the arithmetic or merely spends
 enough tokens to work around it. The counting weakness documented above is real
 for a reasoning-off client and was not reproducible with reasoning on.
 
+### Effort `low` scores the same, costs a third as much, and does it unevenly
+
+The arm above ran at `medium`. `low` is the only lower level the template
+accepts, so the same 16 items, the same four repeats and the same seeds were
+replayed with the level overridden per request. Same server, same frozen
+material, same order - a paired comparison, one arm at a time for the reason the
+next subsection gives. Runner `scripts/kv_run_effort_low.py`, results
+`data/kv-effort-low-120k.json`.
+
+| type | level | correct | median tokens | p90 tokens | max tokens | median latency | p90 latency |
+|---|---|---:|---:|---:|---:|---:|---:|
+| B two-hop | medium | 32/32 | 179 | 238 | 1215 | 10.1 s | 11.1 s |
+| B two-hop | low | 32/32 | 181 | 222 | 1214 | 10.2 s | 11.0 s |
+| C counting | medium | 32/32 | 2570 | 3416 | 3532 | 61.1 s | 95.1 s |
+| C counting | low | 32/32 | 206 | 2660 | 2995 | 10.6 s | 63.9 s |
+
+`low` matched `medium` exactly: 64 of 64, zero truncations, zero non-bare
+answers, and no item answered inconsistently across its four repeats. Over the
+64 pairs it used 29344 output tokens against 85330, **2.9x fewer**, and 17.5
+minutes of wall clock against 39.0, **2.2x less**.
+
+Three things the medians hide, and each one changes what the setting is worth.
+
+**On two-hop retrieval the level does nothing.** 181 tokens against 179. At
+`medium` the model already answers those items in under 200 tokens, so there is
+no reasoning to shorten. The entire saving comes from the counting items.
+
+**On counting, `low` is not shorter - it is bimodal.** The median is 206 tokens,
+but 6 of 32 queries ran past 1000, up to 2995, which is what `medium` spends.
+The long run is not a property of the question. Per item, across its four
+repeats:
+
+```
+#16: [230, 198, 372, 372]      #20: [155, 144, 178, 181]
+#17: [171, 171, 2772, 173]     #21: [2851, 220, 243, 207]
+#18: [2504, 214, 204, 192]     #22: [2660, 449, 489, 2995]
+#19: [177, 176, 179, 2615]     #23: [202, 181, 206, 204]
+```
+
+The same question enumerates the whole partition on one sample and answers in
+200 tokens on the next, and both are correct. So the median latency drops
+roughly 6x while the p90 stays at 63.9 s, and nothing in the request predicts
+which path it will take. If what matters is a predictable answer time rather
+than a cheap average one, `low` does not deliver it.
+
+**In 20 of the 64 pairs `low` used no fewer tokens than `medium`**, and in three
+it used far more: 1214 against 167 on a two-hop item, 2660 against 533 and 2504
+against 1769 on counting items. "Keep your thinking brief" is a sentence in the
+prompt, not a decode-time limit.
+
+What this licenses is narrow. `medium` already scored 64/64 here, so this gate
+is at its ceiling for both levels and a tie cannot separate them - the honest
+reading is that `low` kept every one of `medium`'s hits on this material at
+2.2x less wall clock, not that the two are equivalent. The effective n is again
+8 per type, so 0 of 8 new errors admits a true rate around 30 percent at 95
+percent confidence. And the 0-of-16 repeat agreement follows arithmetically from
+64/64 for the same reason as in the arm above; it is not separate evidence.
+Separating the levels would take a harder frozen set - more distinct questions
+rather than more repeats of these.
+
+The `--reasoning-budget 8192` was left identical in both arms deliberately, as a
+shared safety net rather than a second experimental variable. It was never
+reached: 2995 tokens was the worst case at `low` and 3532 at `medium`.
+
+#### Changing the effort level throws away the whole prompt cache
+
+The level is prompt steering, not a decode constraint, and where it lands
+matters. Asking the server to render the template (`/apply-template`) with a
+short message, at each level:
+
+| level | rendered length | system block |
+|---|---:|---|
+| no kwarg | 63 | none |
+| `medium` | 63 | **none - identical to passing no level** |
+| `low` | 229 | "Reasoning effort is set to low. Keep your thinking brief..." |
+| `xhigh` | 300 | "...think carefully, validate key assumptions..." |
+
+Two things fall out of that table. `medium` is the absence of an instruction,
+not a middle setting, which is why the arm above is described the way it is.
+And the instruction is prepended to the **system block**, so two levels differ
+from the very first token of a 120K prompt.
+
+Which means the prefix cache is worthless across a level change, and
+`--cache-reuse 256` does not shift its way out of it. Measured on the same 120K
+prompt, switching from `medium` to `low`:
+
+| query | level | prefilled tokens | cached | prefill | generation |
+|---|---|---:|---:|---:|---:|
+| 1 | medium | 119963 | 0 | 390.1 s | 45.3 s / 1859 tok |
+| 2 | low | 119993 | 0 | 392.2 s | 5.0 s / 225 tok |
+
+A full 120K prefill costs about 390 s here, near 307 tok/s. Interleaving the two
+levels request by request would have paid that on every one of 64 queries -
+around 7 hours instead of the 18 minutes the blocked run took. So each level
+runs as one block, paying prefill once; within a block every query reported
+`cached` near 119000 and `cached == 0` never recurred. This is specific to the
+effort level: `enable_thinking: false` leaves the prefix alone, which is why the
+arm comparison above could alternate freely.
+
+The same table is also why the latency column exists in the form it does.
+Wall-clock per request was 436 s against 400 s - a 9 percent difference that
+would have read as "the level changes nothing", while the generation underneath
+differed 9x. Splitting `prompt_ms` from `predicted_ms` is not bookkeeping here;
+without it the measurement says the opposite of what happened. Pilot:
+`scripts/kv_pilot_effort.py`, `data/kv-effort-prompt-cache-pilot.json`.
+
+Levels the template accepts are `low`, `medium` and `xhigh`. `high` is silently
+remapped to `xhigh`; anything else raises. `xhigh` is the template's own default
+and is never what a llama.cpp server serves, because the server always passes
+the value of `--reasoning-effort`.
+
 ## The quality gate hit its ceiling
 
 22 tasks with a single unambiguous correct answer, generated over a synthetic
@@ -435,6 +550,11 @@ indistinguishable on these questions, because neither was reached.
 
 The full table is in
 [power-and-undervolt.md](power-and-undervolt.md#energy-per-token-is-the-wrong-metric-when-the-setting-changes-the-token-count).
+
+Note that `medium` here means what the server was started with, and that level
+puts no instruction into the prompt at all; `low` and `xhigh` are the levels
+that add one. See [Changing the effort level throws away the whole prompt
+cache](#changing-the-effort-level-throws-away-the-whole-prompt-cache).
 
 ## Vision projector
 
