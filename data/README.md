@@ -181,6 +181,18 @@ alternating `medium` and `low`, each with `prompt_n`, `cached`, `prompt_ms` and
 the first two entries were run; the remaining pair was cancelled once the answer
 was unambiguous, so `B` has two records rather than four.
 
+`kv-budget-512-120k.json` is the same material and the same 16 items again,
+one arm, with `--reasoning-budget 512` instead of 8192. The budget is a server
+flag rather than a request parameter, so this file has its own `warm` prefill
+and its own server (`../scripts/srv-kv-budget.sh`). Fields match the effort file
+and add `pusta_odpowiedz` (the reply was empty or whitespace) and `reas_ogon`
+(the last 200 characters of the reasoning trace, which is where the forced
+end-of-thinking is visible mid-sentence). `max_tokens` is 1024 against a budget
+of 512 on purpose: without that margin a budget stop could not be told apart
+from a `max_tokens` stop, and `finish` would be ambiguous. `druga_tura` is a
+single follow-up turn sent after a budget-exhausted reply, to check that the
+conversation continues and the prefix is still reused.
+
 `kv-longctx-items.json` holds the 24 questions with their answers and the
 generator's seed. The contexts themselves are reproducible from
 `../scripts/kv_gen_longctx.py` with that seed and are not committed.

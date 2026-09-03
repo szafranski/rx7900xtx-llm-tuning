@@ -13,6 +13,7 @@ energy-early-soak.jsonl,"Early soak, before the profile was fixed",varied,bench-
 energy-early.jsonl,"Early energy measurements, before the profile was fixed",varied,bench-energy-early.sh,11,9352,1d8938a683a80490d5885fdc2a744a644c26e969a1a49285c96bba40e6adc738
 idle-power.jsonl,Idle GPU power baseline,factory and capped,bench-idle.sh,10,4805,db5617bc4467f165c5e0cda557df2d04fd68862786ee18f2d151059da7ccb929
 idle-with-projector.jsonl,Idle power with the vision projector loaded,"272 W, -75 mV, 2200 MHz",bench-idle-projector.sh,6,2860,76d1be3110037355ff626b3c0804694aa7e3b996ec65dd3c8227c4799d9a7764
+kv-budget-512-120k.json,"Reasoning budget 512 at 120K, the level at which the budget is actually reached","272 W, -75 mV, 2200 MHz",kv_run_budget.py,12,10574,a82d4b430efb483dda6cd6c93ab816a465abbf5cc77e3d9e950ba0b3faa76cf6
 kv-effort-low-120k.json,"Reasoning effort low at 120K, paired with the medium arm of kv-reasoning-120k","272 W, -75 mV, 2200 MHz",kv_run_effort_low.py,12,28559,e492990760b01df0206c2d948b896496ff4a855c7308787ba4ff47154c22aac1
 kv-effort-prompt-cache-pilot.json,"What an effort level renders into the prompt, and what changing it costs the prefix cache","272 W, -75 mV, 2200 MHz",kv_pilot_effort.py,2,1500,76dfc5ceba9c0565c6b3c9c77e60d92a4b6d9b92e45dbf2f0792813072769abe
 kv-enumerate-turbo4-listfirst.json,"Same test with the list asked first, the pair-order control","272 W, -75 mV, 2200 MHz",kv_run_enumerate.py,7,13211,e8a6bea392b63797072cd366726a5e78d09db1c24b0971445c4387d0c3d30080

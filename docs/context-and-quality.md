@@ -519,9 +519,62 @@ without it the measurement says the opposite of what happened. Pilot:
 `scripts/kv_pilot_effort.py`, `data/kv-effort-prompt-cache-pilot.json`.
 
 Levels the template accepts are `low`, `medium` and `xhigh`. `high` is silently
-remapped to `xhigh`; anything else raises. `xhigh` is the template's own default
-and is never what a llama.cpp server serves, because the server always passes
-the value of `--reasoning-effort`.
+remapped to `xhigh`; anything else raises. `xhigh` is the template's own default,
+and whether a server ever serves it depends on the flag: `--reasoning-effort`
+defaults to the literal `default`, which leaves the template's choice alone. Set
+it to a level, as the profile here does, and that level is what the template
+sees.
+
+### Exhausting the reasoning budget closes the thought, it does not cut the answer
+
+Every run above had `--reasoning-budget 8192` and none of them reached it - the
+longest thought observed was 3532 tokens, 43 percent of the budget. So the
+failure mode had never been seen. llama.cpp has a specific mechanism for it:
+`--reasoning-budget-message` injects text *before* the end-of-thinking tag when
+the budget runs out, which means the server closes the block itself rather than
+stopping generation. Whether that yields a truncated answer or an early one is
+the question.
+
+One arm, budget 512, everything else identical to the medium arm above, same 16
+questions and same seeds. `max_tokens` was set to 1024 so that a budget stop
+could be told apart from a `max_tokens` stop; no request finished on `length`.
+
+| run | type | correct | completion tokens, median | reasoning chars, median |
+|---|---|---:|---:|---:|
+| budget 8192, `medium` | retrieval | 8/8 | 178.5 | 447 |
+| budget 8192, `medium` | counting | 8/8 | 2532 | 4401 |
+| budget 512, `medium` | retrieval | 8/8 | 178.5 | 448 |
+| budget 512, `medium` | counting | 8/8 | 515 | 1110 |
+
+The budget binds only where the thought is long. Retrieval is untouched, to the
+half-token: 178.5 either way. Counting is capped, and visibly so - 7 of the 8
+counting queries stopped at exactly 515 tokens.
+
+Nothing about the stop is ragged. All 16 requests returned `finish_reason:
+stop`, no answer came back empty, and every answer was bare - a number, or a
+single `WEZEL-xxx`. The reasoning text is what gets cut, mid-sentence, in the
+middle of an enumeration: `- Akapit 232: partycja 40\n- Ak`. A following turn
+works normally and reuses the prefix (`cached` 119959).
+
+#### The written enumeration is not what fixes the arithmetic
+
+Counting scored 8/8 on 4.9x fewer tokens while its enumeration was demonstrably
+incomplete. In one query the cut lands at paragraph 119 of roughly 800, and the
+count is still right. Whatever repairs the arithmetic that reasoning-off gets
+wrong, it is not the completeness of the list the model writes out. That sits
+alongside the earlier finding that a reasoning-off model
+[names the entries correctly and still miscounts them](#counting-fails-while-enumeration-mostly-works).
+
+We cannot say which mechanism this is. 8/8 rules out luck; it does not show
+whether the answer is read off attention over the context with the enumeration
+as theatre, or something else. And the ceiling caveat applies with full force:
+8 distinct questions per type, `medium` at budget 8192 already scored 8/8 on
+them, so a tie discriminates nothing and 0/8 errors admits a true error rate
+around 30 percent at 95 percent confidence. The supported claim is that on this
+material the budget is not the binding constraint and running out of it does not
+damage the answer - not that 512 is enough. Data:
+`data/kv-budget-512-120k.json`, `scripts/kv_run_budget.py`,
+`scripts/srv-kv-budget.sh`.
 
 ## The quality gate hit its ceiling
 
@@ -546,7 +599,10 @@ are synthetic. No third-party text is redistributed here.
 76.20 in Polish; `data/context-32k.jsonl`) and cost 2.7x to 4.8x more energy per
 answer, because it generates a great deal more. The reasoning budget is the
 largest single cost lever in the configuration. Budget 2048 and 8192 were
-indistinguishable on these questions, because neither was reached.
+indistinguishable on these questions, because neither was reached. A budget low
+enough to be reached is measured in [Exhausting the reasoning budget closes the
+thought, it does not cut the
+answer](#exhausting-the-reasoning-budget-closes-the-thought-it-does-not-cut-the-answer).
 
 The full table is in
 [power-and-undervolt.md](power-and-undervolt.md#energy-per-token-is-the-wrong-metric-when-the-setting-changes-the-token-count).

@@ -61,6 +61,7 @@ EXPERIMENTS = {
     "kv-enumerate-turbo4-listfirst.json": ("Same test with the list asked first, the pair-order control", "272 W, -75 mV, 2200 MHz", "kv_run_enumerate.py"),
     "kv-reasoning-120k.json":      ("Reasoning on vs off at 120K on the shipped profile, counting and two-hop", "272 W, -75 mV, 2200 MHz", "kv_run_reasoning.py"),
     "kv-effort-low-120k.json":     ("Reasoning effort low at 120K, paired with the medium arm of kv-reasoning-120k", "272 W, -75 mV, 2200 MHz", "kv_run_effort_low.py"),
+    "kv-budget-512-120k.json":     ("Reasoning budget 512 at 120K, the level at which the budget is actually reached", "272 W, -75 mV, 2200 MHz", "kv_run_budget.py"),
     "kv-effort-prompt-cache-pilot.json": ("What an effort level renders into the prompt, and what changing it costs the prefix cache", "272 W, -75 mV, 2200 MHz", "kv_pilot_effort.py"),
     "kv-nexttoken-q8.json":        ("Next-token distributions at 8K-120K, q8_0 V cache, ctx 131072", "272 W, -75 mV, 2200 MHz", "kv_run_nexttoken.py"),
     "kv-nexttoken-turbo4.json":    ("Next-token distributions at 8K-120K, turbo4 V cache, ctx 131072", "272 W, -75 mV, 2200 MHz", "kv_run_nexttoken.py"),
