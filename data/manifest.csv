@@ -5,6 +5,8 @@ aspm-perplexity.tsv,Perplexity before and after the ASPM sweep,"272 W, -75 mV, 2
 aspm-sweep-early.jsonl,"First ASPM sweep, before the profile was fixed",varied,bench-aspm-early.sh,6,5946,504df3e59453b3bda532b89db3037ae116492cd41d71adc71e82f5a324c126ef
 aspm-under-load.jsonl,ASPM default/performance/powersave under decode load,"272 W, -75 mV, 2200 MHz",bench-aspm.sh,12,11928,04afc8d99adefcfa615f4ab7482c7daf141242ca6ef86c4fb155c9447927e97c
 clock-cap-sweep.jsonl,Max SCLK 3045 down to 1800 MHz,"272 W, 0 mV",bench-clock-cap.sh,10,9729,f3cd011301b70cd2b509b9e2bcdf3d7f0c5b4f498def2c098c617ab6e0c31b22
+concurrency-20260905-monitor.jsonl,1 Hz VRAM and server counters during those runs,"272 W, -75 mV, 2200 MHz",concurrency_collect.py,1446,314710,725f0d7ea2521e3567bc4f1b095641fdc9b136e612cebd93e68ca7d8edefa4af
+concurrency-20260905.jsonl,"Three and four concurrent requests at 2 and 3 slots, ctx 147456, kv-unified","272 W, -75 mV, 2200 MHz",concurrency_collect.py,13,4177,9dde5b944fba38a5ffb9c4bce301a92bfeec6ecb02125e7800fe74f81f44da67
 context-128k-cache-types.jsonl,KV cache types at 128K on a 92K prompt,"272 W, -75 mV, 2200 MHz",bench-context-65k.sh,4,3971,88e64102570e54f5607f3c9bb0798fcaeb587c4cc92388ab81480804ed1bc0c7
 context-128k.jsonl,"Decode and VRAM at 128K context, with and without projector","272 W, -75 mV, 2200 MHz",bench-context.sh,12,15356,34173bd297860c24a70d313c7965884754be2b77dd8b0babd57df26ecd0992a6
 context-32k.jsonl,"Parameter sweep at 32K context: p-min, ubatch, reasoning, MMVQ","272 W, -75 mV",bench-context-32k.sh,15,59864,d8bc01e2ae9893c356ea4aba56f574f07cc97e2df51f248081f2e528ab243cc4

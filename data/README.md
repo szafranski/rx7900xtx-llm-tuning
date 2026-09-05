@@ -45,6 +45,31 @@ Idle files (`idle-power.jsonl`, `aspm-idle.jsonl`, `display-refresh-idle.jsonl`,
 trapezoidal integral of board power over `span_s` seconds from `n` samples, with
 `gpu_w_med/min/max/sd` and median `mv`, `sclk`, `mclk`, `jt` alongside.
 
+## Concurrency files
+
+`concurrency-20260905.jsonl` holds one record per request from the concurrent
+runs, and uses its own field names because they come straight from the server's
+`timings` block rather than from `measure.py`: `tag`, `arm` (`p2/3req`,
+`p2/2req-warm`, `p2/1req`, `p3/3req`, `p3/4req`), `parallel` (slots configured),
+`role`, `prompt_total_n` (`cache_n` plus `prompt_new_n`), `cache_n`,
+`prompt_new_n`, `prompt_ms`, `prompt_per_second`, `predicted_n`, `predicted_ms`,
+`decode_tps`, `draft_n`, `draft_n_accepted`, `accept_pct` and `wall_s`. There is
+no telemetry block: these runs carry no GPU sampling.
+
+`concurrency-20260905-monitor.jsonl` holds the 1 Hz sampler output, trimmed to
+the two test windows. The trim is derived from the data rather than typed in:
+`concurrency_collect.py` keeps the span from the first to the last sample with
+`requests_processing` above zero, plus 30 seconds either side. Fields are
+`session` (`parallel-2` or `parallel-3`), `t`, `vram_mib` from sysfs, and the
+server counters `prompt_tokens_total`,
+`tokens_predicted_total`, `requests_processing`, `requests_deferred` and
+`n_busy_slots_per_decode`. A counter of `null` is a `/metrics` call that did not
+answer inside the sampler's 2-second timeout; 21 of the 1446 samples are like
+that, and they cluster during heavy prompt processing.
+
+These two files are held to a lower standard than everything else here, for the
+reasons listed at the top of [../docs/concurrency.md](../docs/concurrency.md).
+
 ## Soak files
 
 `soak-efficient-*-runs.jsonl` ends with a summary object whose `runs` array holds

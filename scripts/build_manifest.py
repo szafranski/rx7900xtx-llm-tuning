@@ -71,6 +71,8 @@ EXPERIMENTS = {
     "kv-vision-q8.json":           ("Three image tasks, q8_0 V cache, ctx 131072", "272 W, -75 mV, 2200 MHz", "kv_run_vision.py"),
     "kv-vision-turbo4.json":       ("Three image tasks, turbo4 V cache, ctx 131072", "272 W, -75 mV, 2200 MHz", "kv_run_vision.py"),
     "spec-mtp-early.jsonl":        ("First MTP measurements", "303 W, 0 mV", "bench-context-32k.sh"),
+    "concurrency-20260905.jsonl":  ("Three and four concurrent requests at 2 and 3 slots, ctx 147456, kv-unified", "272 W, -75 mV, 2200 MHz", "concurrency_collect.py"),
+    "concurrency-20260905-monitor.jsonl": ("1 Hz VRAM and server counters during those runs", "272 W, -75 mV, 2200 MHz", "concurrency_collect.py"),
 }
 
 # The single-object JSON files keep their per-request records under one key.

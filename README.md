@@ -88,6 +88,12 @@ Server:
 Set `RADV_PERFTEST=nogttspill`. Do not set `GGML_VK_DISABLE_MMVQ` at all, not
 even to `0`.
 
+That is a single-stream configuration, which is what almost everything here was
+measured against. Serving several agents from one server needs `--parallel` above
+1 and `--kv-unified`, and behaves differently enough to be worth its own file:
+[docs/concurrency.md](docs/concurrency.md). Those runs are held to a lower
+standard than the rest, and say so.
+
 `turbo4` and `ngram-map-k` exist only in the fork this was built from;
 [docs/setup.md](docs/setup.md#which-results-depend-on-the-fork) separates the
 fork-dependent results from the ones that do not depend on the fork.
